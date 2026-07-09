@@ -6,7 +6,7 @@
 
 **Architecture:** Use the existing Next.js App Router project as the app shell. Store all business records in a relational database with explicit tables for jobs, customers, teams, invoices, payments, commissions, expenses, and feedback. Keep financial calculations in server-side typed functions with tests so the site can replace the current Excel workbook without losing the business logic.
 
-**Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS, PostgreSQL, Prisma, Zod, server actions or route handlers, OpenAI structured outputs for WhatsApp parsing, and HTML print views for invoices in the first release.
+**Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS, Neon PostgreSQL, Prisma, Zod, Auth.js credentials auth with database-backed roles, server actions or route handlers, xAI Grok 4.3 Latest structured JSON extraction for WhatsApp parsing, and HTML print views for invoices in the first release.
 
 ---
 
@@ -103,7 +103,20 @@ Create these tables through Prisma migrations.
 - `Feedback`: job, customer, token, rating, comment, submitted at, public display permission.
 - `AuditLog`: actor, entity type, entity id, action, before JSON, after JSON, created at.
 
+## Authentication and Access Control
+
+Provider decision: use Auth.js credentials authentication for internal staff accounts. Staff users are stored in Neon through the `User` table, including role, active status, optional team assignment, and password hash. Route access is role-gated on the server:
+
+- CEO/admin: dashboard, finance, expenses, dispatch, intake, jobs, team entries, and partner reports.
+- Dispatcher/operator: intake, dispatch, and jobs.
+- Data-entry operator: intake, dispatch, jobs, expenses, and team-submitted WhatsApp entries.
+- Team lead: team mobile worklist and assigned job records only.
+- Partner viewer: sender commission report only.
+- Customer invoice and feedback pages remain public token routes and do not require login.
+
 ## LLM WhatsApp Extraction
+
+Provider decision: use xAI `grok-4.3-latest` for WhatsApp parsing. The xAI API is OpenAI-compatible at `https://api.x.ai/v1`, authenticated with `XAI_API_KEY`. Keep the model name configurable through `XAI_MODEL` so the deployment can change aliases without code edits.
 
 Build a paste-and-review intake screen.
 
@@ -293,7 +306,7 @@ canCloseJob =
 
 - [ ] Add dependencies: `prisma`, `@prisma/client`, `zod`, and the selected auth package.
 - [ ] Add scripts: `db:generate`, `db:migrate`, `db:studio`, `typecheck`.
-- [ ] Create environment validation for database URL and OpenAI API key.
+- [ ] Create environment validation for Neon database URL and xAI API settings.
 - [ ] Create Prisma client wrapper.
 - [ ] Run `pnpm lint` and `pnpm typecheck`.
 

@@ -25,6 +25,11 @@ Ali is the CEO/operator. The company receives outsourced WhatsApp clients from a
 - Do not let a job move to fully completed without recording whether the job was performed and how payment was handled: cash, online/account, split, unpaid, no-charge, or cancelled.
 - Generate normal customer invoices after service/job completion confirmation, not at initial booking.
 
+## Secrets and Environment Files
+
+- Never read, print, inspect, parse, or expose secret environment files such as `.env`, `.env.local`, `.env.production`, or any file containing credentials, tokens, API keys, connection strings, or passwords.
+- To verify configuration, inspect only variable names, use safe presence checks, or ask the user to confirm values without sharing them.
+
 ## Workbook Mapping Rules
 
 - `Dash Board` maps to reports, not a primary table.

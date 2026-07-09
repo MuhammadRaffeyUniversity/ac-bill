@@ -11,12 +11,12 @@ export const businessSetup = {
 } as const;
 
 export const navigationItems = [
-  "Dashboard",
-  "Intake",
-  "Dispatch",
-  "Jobs",
-  "Finance",
-  "Expenses",
+  { label: "Dashboard", href: "/" },
+  { label: "Intake", href: "/jobs/intake" },
+  { label: "Dispatch", href: "/dispatch" },
+  { label: "Jobs", href: "/jobs" },
+  { label: "Finance", href: "/finance" },
+  { label: "Expenses", href: "/expenses" },
 ] as const;
 
 export const teamWorkloadRows = [

@@ -12,6 +12,7 @@ enum UserRole {
   DISPATCHER
   DATA_ENTRY
   TEAM_LEAD
+  PARTNER_VIEWER
   VIEWER
 }
 
@@ -39,6 +40,7 @@ enum InvoiceStatus {
   DRAFT
   ISSUED
   PAID
+  PARTIALLY_PAID
   VOID
 }
 
@@ -49,11 +51,454 @@ enum PaymentMethod {
   OTHER
 }
 
+enum PaymentStatus {
+  NOT_RECORDED
+  PAID
+  PARTIALLY_PAID
+  UNPAID
+  NO_CHARGE
+  CANCELLED
+}
+
+enum ExpensePaidBy {
+  COMPANY
+  TEAM
+  MEMBER
+  PARTNER
+  OWNER
+}
+
+enum TeamEntryType {
+  COMPLETION
+  PAYMENT
+  EXPENSE
+  NOTE
+  CORRECTION
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  role      UserRole @default(VIEWER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String               @id @default(cuid())
+  name               String
+  email              String               @unique
+  passwordHash       String?
+  role               UserRole             @default(VIEWER)
+  teamId             String?
+  active             Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  auditLogs          AuditLog[]
+  enteredTeamEntries TeamSubmittedEntry[] @relation("EnteredByOperator")
+  statusChanges      JobStatusHistory[]
+  team               Team?                @relation(fields: [teamId], references: [id])
+
+  @@index([role])
+  @@index([teamId])
+}
+
+model Team {
+  id                String               @id @default(cuid())
+  name              String
+  region            String?
+  compensationType  CompensationType
+  active            Boolean              @default(true)
+  defaultMembers    String[]             @default([])
+  latitude          Decimal?             @db.Decimal(10, 7)
+  longitude         Decimal?             @db.Decimal(10, 7)
+  serviceAreaTags   String[]             @default([])
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  assignedJobs      Job[]
+  commissionEntries CommissionEntry[]
+  commissionRules   CommissionRule[]
+  expenses          TeamExpense[]
+  members           TeamMember[]
+  submittedEntries  TeamSubmittedEntry[]
+  users             User[]
+
+  @@index([active, compensationType])
+}
+
+model TeamMember {
+  id                 String               @id @default(cuid())
+  name               String
+  phone              String?
+  teamId             String
+  role               String?
+  active             Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  team               Team                 @relation(fields: [teamId], references: [id])
+  submittedEntries   TeamSubmittedEntry[] @relation("SubmittedByMember")
+  employeeRecordRows EmployeeRecord[]
+
+  @@index([teamId, active])
+}
+
+model Partner {
+  id                    String            @id @default(cuid())
+  name                  String
+  phone                 String?
+  defaultCommissionRate Decimal           @default(0.25) @db.Decimal(5, 4)
+  active                Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  commissionEntries     CommissionEntry[]
+  jobs                  Job[]
+
+  @@index([active])
+}
+
+model Customer {
+  id              String           @id @default(cuid())
+  name            String
+  phone           String
+  normalizedPhone String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  addresses       ServiceAddress[]
+  feedback        Feedback[]
+  jobs            Job[]
+
+  @@index([normalizedPhone])
+}
+
+model ServiceAddress {
+  id         String   @id @default(cuid())
+  customerId String
+  rawAddress String
+  street     String?
+  area       String?
+  postcode   String?
+  city       String?
+  state      String?
+  country    String   @default("Malaysia")
+  latitude   Decimal? @db.Decimal(10, 7)
+  longitude  Decimal? @db.Decimal(10, 7)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  customer   Customer @relation(fields: [customerId], references: [id])
+  jobs       Job[]
+
+  @@index([customerId])
+  @@index([area, city, state])
+}
+
+model Job {
+  id                   String               @id @default(cuid())
+  customerId           String
+  addressId            String
+  sourcePartnerId      String?
+  assignedTeamId       String?
+  requestedAt          DateTime?
+  timezone             String?
+  serviceType          ServiceType
+  unitsCount           Int
+  status               JobStatus            @default(BOOKED)
+  paymentStatus        PaymentStatus        @default(NOT_RECORDED)
+  priority             String?
+  rawWhatsAppText      String
+  parsedFields         Json?
+  missingFields        String[]             @default([])
+  extractionConfidence Decimal?             @db.Decimal(5, 4)
+  scheduledWindowStart DateTime?
+  scheduledWindowEnd   DateTime?
+  performedAt          DateTime?
+  performed            Boolean?
+  cancellationReason   String?
+  remarks              String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  address              ServiceAddress       @relation(fields: [addressId], references: [id])
+  assignedTeam         Team?                @relation(fields: [assignedTeamId], references: [id])
+  commissionEntries    CommissionEntry[]
+  customer             Customer             @relation(fields: [customerId], references: [id])
+  feedback             Feedback?
+  invoice              Invoice?
+  sourcePartner        Partner?             @relation(fields: [sourcePartnerId], references: [id])
+  statusHistory        JobStatusHistory[]
+  submittedEntries     TeamSubmittedEntry[]
+  teamExpenses         TeamExpense[]
+  units                JobUnit[]
+
+  @@index([status, requestedAt])
+  @@index([assignedTeamId, requestedAt])
+  @@index([customerId])
+  @@index([sourcePartnerId])
+}
+
+model JobUnit {
+  id              String   @id @default(cuid())
+  jobId           String
+  unitLabel       String?
+  acType          String?
+  horsepower      String?
+  issue           String?
+  actionPerformed String?
+  unitPrice       Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  job             Job      @relation(fields: [jobId], references: [id])
+
+  @@index([jobId])
+}
+
+model JobStatusHistory {
+  id             String     @id @default(cuid())
+  jobId          String
+  previousStatus JobStatus?
+  nextStatus     JobStatus
+  actorId        String?
+  note           String?
+  createdAt      DateTime   @default(now())
+  actor          User?      @relation(fields: [actorId], references: [id])
+  job            Job        @relation(fields: [jobId], references: [id])
+
+  @@index([jobId, createdAt])
+  @@index([actorId])
+}
+
+model TeamSubmittedEntry {
+  id                  String        @id @default(cuid())
+  teamId              String
+  submittedByMemberId String?
+  enteredByOperatorId String?
+  jobId               String?
+  rawWhatsAppText     String
+  entryType           TeamEntryType
+  parsedFields        Json?
+  entryDate           DateTime
+  reviewStatus        ReviewStatus  @default(PENDING)
+  notes               String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  enteredByOperator   User?         @relation("EnteredByOperator", fields: [enteredByOperatorId], references: [id])
+  job                 Job?          @relation(fields: [jobId], references: [id])
+  submittedByMember   TeamMember?   @relation("SubmittedByMember", fields: [submittedByMemberId], references: [id])
+  team                Team          @relation(fields: [teamId], references: [id])
+
+  @@index([teamId, entryDate])
+  @@index([jobId])
+  @@index([reviewStatus])
+}
+
+model Invoice {
+  id             String           @id @default(cuid())
+  jobId          String           @unique
+  invoiceNumber  String           @unique
+  status         InvoiceStatus    @default(DRAFT)
+  subtotal       Decimal          @default(0) @db.Decimal(12, 2)
+  discount       Decimal          @default(0) @db.Decimal(12, 2)
+  tax            Decimal          @default(0) @db.Decimal(12, 2)
+  total          Decimal          @default(0) @db.Decimal(12, 2)
+  issuedAt       DateTime?
+  dueAt          DateTime?
+  printableToken String           @unique
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  commission     CommissionEntry?
+  items          InvoiceItem[]
+  job            Job              @relation(fields: [jobId], references: [id])
+  payments       Payment[]
+
+  @@index([status, issuedAt])
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Decimal  @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  lineTotal   Decimal  @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+}
+
+model Payment {
+  id               String           @id @default(cuid())
+  invoiceId        String
+  method           PaymentMethod
+  amount           Decimal          @db.Decimal(12, 2)
+  collectedByTeam  Boolean          @default(false)
+  referenceNumber  String?
+  receivedAt       DateTime         @default(now())
+  notes            String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  invoice          Invoice          @relation(fields: [invoiceId], references: [id])
+  pettyCashEntries PettyCashEntry[]
+
+  @@index([invoiceId])
+  @@index([method, receivedAt])
+}
+
+model TeamExpense {
+  id          String        @id @default(cuid())
+  jobId       String?
+  teamId      String
+  date        DateTime
+  category    String
+  description String?
+  amount      Decimal       @db.Decimal(12, 2)
+  paidBy      ExpensePaidBy
+  approved    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  job         Job?          @relation(fields: [jobId], references: [id])
+  team        Team          @relation(fields: [teamId], references: [id])
+
+  @@index([teamId, date])
+  @@index([jobId])
+  @@index([approved])
+}
+
+model CompanyExpense {
+  id            String         @id @default(cuid())
+  date          DateTime
+  category      String
+  description   String?
+  amount        Decimal        @db.Decimal(12, 2)
+  paymentMethod PaymentMethod?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([date])
+  @@index([category])
+}
+
+model PersonalExpense {
+  id          String   @id @default(cuid())
+  date        DateTime
+  amount      Decimal  @db.Decimal(12, 2)
+  category    String?
+  description String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+}
+
+model PettyCashEntry {
+  id           String   @id @default(cuid())
+  date         DateTime
+  cashIn       Decimal  @default(0) @db.Decimal(12, 2)
+  cashOut      Decimal  @default(0) @db.Decimal(12, 2)
+  balanceAfter Decimal  @db.Decimal(12, 2)
+  sourceType   String?
+  sourceId     String?
+  paymentId    String?
+  note         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  payment      Payment? @relation(fields: [paymentId], references: [id])
+
+  @@index([date])
+  @@index([sourceType, sourceId])
+}
+
+model CommissionRule {
+  id               String           @id @default(cuid())
+  teamId           String?
+  compensationType CompensationType
+  teamRate         Decimal          @default(0) @db.Decimal(5, 4)
+  partnerRate      Decimal          @default(0.25) @db.Decimal(5, 4)
+  companyRate      Decimal          @default(0) @db.Decimal(5, 4)
+  effectiveFrom    DateTime         @default(now())
+  effectiveTo      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  team             Team?            @relation(fields: [teamId], references: [id])
+
+  @@index([teamId, effectiveFrom])
+  @@index([compensationType, effectiveFrom])
+}
+
+model CommissionEntry {
+  id               String   @id @default(cuid())
+  jobId            String?
+  invoiceId        String?  @unique
+  teamId           String
+  partnerId        String?
+  salesAmount      Decimal  @db.Decimal(12, 2)
+  teamAmount       Decimal  @default(0) @db.Decimal(12, 2)
+  partnerAmount    Decimal  @default(0) @db.Decimal(12, 2)
+  companyAmount    Decimal  @default(0) @db.Decimal(12, 2)
+  expenseAmount    Decimal  @default(0) @db.Decimal(12, 2)
+  netCompanyProfit Decimal  @default(0) @db.Decimal(12, 2)
+  calculatedAt     DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  invoice          Invoice? @relation(fields: [invoiceId], references: [id])
+  job              Job?     @relation(fields: [jobId], references: [id])
+  partner          Partner? @relation(fields: [partnerId], references: [id])
+  team             Team     @relation(fields: [teamId], references: [id])
+
+  @@index([jobId])
+  @@index([teamId, calculatedAt])
+  @@index([partnerId, calculatedAt])
+}
+
+model EmployeeRecord {
+  id           String      @id @default(cuid())
+  teamMemberId String?
+  teamId       String?
+  date         DateTime
+  sales        Decimal     @default(0) @db.Decimal(12, 2)
+  cash         Decimal     @default(0) @db.Decimal(12, 2)
+  sent         Decimal     @default(0) @db.Decimal(12, 2)
+  expense      Decimal     @default(0) @db.Decimal(12, 2)
+  gas          Decimal     @default(0) @db.Decimal(12, 2)
+  commission   Decimal     @default(0) @db.Decimal(12, 2)
+  remarks      String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  teamMember   TeamMember? @relation(fields: [teamMemberId], references: [id])
+
+  @@index([teamMemberId, date])
+  @@index([teamId, date])
+}
+
+model Feedback {
+  id                      String    @id @default(cuid())
+  jobId                   String    @unique
+  customerId              String
+  token                   String    @unique
+  rating                  Int?
+  comment                 String?
+  submittedAt             DateTime?
+  publicDisplayPermission Boolean   @default(false)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  customer                Customer  @relation(fields: [customerId], references: [id])
+  job                     Job       @relation(fields: [jobId], references: [id])
+
+  @@index([customerId])
+  @@index([submittedAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  entityType String
+  entityId   String
+  action     String
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation(fields: [actorId], references: [id])
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
 }

@@ -3,17 +3,21 @@ import {
   BanknoteIcon,
   CalendarDaysIcon,
   ClipboardCheckIcon,
+  CircleUserRoundIcon,
   FileTextIcon,
   ListFilterIcon,
+  LogOutIcon,
   PrinterIcon,
   RefreshCwIcon,
   SearchIcon,
   ShieldCheckIcon,
   TruckIcon,
 } from "lucide-react";
+import Link from "next/link";
 
+import { signOut } from "@/auth";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Card,
@@ -37,6 +41,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { businessSetup, navigationItems, teamWorkloadRows } from "@/src/lib/config/business";
 import { dispatchJobs, intakeReview, todayMetrics } from "@/src/lib/dashboard/sample-data";
+import { cn } from "@/lib/utils";
+import { requireRole } from "@/src/lib/auth/guards";
 import {
   calculateCommissionTeamSplit,
   calculatePaymentReconciliation,
@@ -104,7 +110,9 @@ function statusVariant(status: string) {
   return "outline";
 }
 
-export default function Home() {
+export default async function Home() {
+  const session = await requireRole(["ADMIN"]);
+
   return (
     <main className="min-h-screen bg-muted/30 text-foreground">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
@@ -121,13 +129,16 @@ export default function Home() {
 
           <nav className="mt-6 flex gap-1 overflow-x-auto lg:flex-col">
             {navigationItems.map((item) => (
-              <Button
-                key={item}
-                variant={item === "Dashboard" ? "secondary" : "ghost"}
-                className="justify-start"
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  buttonVariants({ variant: item.href === "/" ? "secondary" : "ghost" }),
+                  "justify-start"
+                )}
               >
-                {item}
-              </Button>
+                {item.label}
+              </Link>
             ))}
           </nav>
 
@@ -155,16 +166,36 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2 rounded-md border bg-muted/40 px-2.5 py-1.5">
+                  <CircleUserRoundIcon className="size-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 leading-tight">
+                    <p className="truncate text-sm font-medium">{session.user.name || "Admin account"}</p>
+                    <p className="hidden truncate text-xs text-muted-foreground sm:block">
+                      {session.user.email}
+                    </p>
+                  </div>
+                </div>
                 <Badge variant="outline">
                   <CalendarDaysIcon data-icon="inline-start" />
                   09 Jul 2026
                 </Badge>
-                <Badge variant="secondary">CEO view</Badge>
+                <Badge variant="secondary">CEO / Admin</Badge>
                 <ThemeToggle />
                 <Button variant="outline">
                   <PrinterIcon data-icon="inline-start" />
                   Daily report
                 </Button>
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/signin" });
+                  }}
+                >
+                  <Button variant="outline" type="submit">
+                    <LogOutIcon data-icon="inline-start" />
+                    Sign out
+                  </Button>
+                </form>
               </div>
             </div>
           </header>

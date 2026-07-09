@@ -27,6 +27,7 @@ This repository is for an AC company operations site. The product plan is in `Pl
 - Avoid broad rewrites of the Next.js scaffold unless needed for the current task.
 - Preserve existing user work and do not revert unrelated files.
 - Do not add speculative features such as live WhatsApp API ingestion, GPS tracking, payroll, or maps unless the user asks.
+- Never read, print, inspect, parse, or expose secret environment files such as `.env`, `.env.local`, `.env.production`, or any file containing credentials, tokens, API keys, connection strings, or passwords. Use safe variable-name or presence checks instead.
 
 ## Preferred Build Order
 
