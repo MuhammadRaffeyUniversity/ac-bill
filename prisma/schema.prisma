@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  DISPATCHER
+  DATA_ENTRY
+  TEAM_LEAD
+  VIEWER
+}
+
+enum CompensationType {
+  SALARY
+  COMMISSION
+}
+
+enum JobStatus {
+  BOOKED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  POSTPONED
+}
+
+enum ServiceType {
+  SERVICE
+  INSTALL
+  REPAIR
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  VOID
+}
+
+enum PaymentMethod {
+  CASH
+  ONLINE
+  CARD
+  OTHER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      UserRole @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

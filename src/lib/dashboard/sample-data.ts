@@ -1,0 +1,78 @@
+export const dispatchJobs = [
+  {
+    id: "JOB-1028",
+    time: "09:30",
+    customer: "Customer review pending",
+    area: "Pasir Gudang",
+    service: "Service",
+    units: 1,
+    status: "Booked",
+    payment: "Not recorded",
+    suggestedTeam: "Salary team 2",
+    reason: "Area tag match, lighter workload",
+  },
+  {
+    id: "JOB-1029",
+    time: "11:00",
+    customer: "Walk-in WhatsApp lead",
+    area: "Johor Bahru",
+    service: "Repair",
+    units: 2,
+    status: "Assigned",
+    payment: "Unpaid",
+    suggestedTeam: "Salary team 1",
+    reason: "Same-day availability",
+  },
+  {
+    id: "JOB-1030",
+    time: "14:00",
+    customer: "Sender job awaiting confirmation",
+    area: "Melaka",
+    service: "Install",
+    units: 1,
+    status: "In progress",
+    payment: "Split",
+    suggestedTeam: "Commission team",
+    reason: "Commission-region queue",
+  },
+  {
+    id: "JOB-1031",
+    time: "16:30",
+    customer: "Address needs postcode",
+    area: "Nilai",
+    service: "Service",
+    units: 3,
+    status: "Booked",
+    payment: "Not recorded",
+    suggestedTeam: "Salary team 3",
+    reason: "Needs dispatcher review",
+  },
+] as const;
+
+export const todayMetrics = {
+  totalJobs: 18,
+  assignedJobs: 11,
+  completedJobs: 8,
+  cancelledJobs: 1,
+  salaryTeamSales: 510,
+  commissionTeamSales: 560,
+  onlineReceived: 640,
+  depositedCash: 320,
+  cashHeldByTeams: 1500,
+  approvedTeamExpenses: 115,
+  companyExpenses: 240,
+} as const;
+
+export const intakeReview = {
+  rawMessage:
+    "July 08, 2026 at 02:00 PM (Asia/Kuala Lumpur)\n\nCustomer name pending review\n+60 19-756 3236\nNo 46 jln mawar 56 taman mawar pasir gudang johor\nHow many aircond units? 1\nService, Install or Repair? Service",
+  extractedFields: [
+    ["Requested", "08 Jul, 2:00 PM"],
+    ["Phone", "+60197563236"],
+    ["Area", "Pasir Gudang"],
+    ["Units", "1"],
+    ["Service", "SERVICE"],
+  ],
+  missingFields: ["Postcode", "Confirmed customer name"],
+  confidence: 92,
+} as const;
