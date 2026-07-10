@@ -9,14 +9,21 @@ describe("auth permissions", () => {
     expect(hasAnyRole(undefined, ["ADMIN"])).toBe(false);
   });
 
-  test("keeps CEO finance reports admin-only", () => {
-    expect(canAccessSection("ADMIN", "finance")).toBe(true);
-    expect(canAccessSection("DISPATCHER", "finance")).toBe(false);
-    expect(canAccessSection("TEAM_LEAD", "finance")).toBe(false);
+  test("keeps the CEO on the dashboard-only observer surface", () => {
+    expect(canAccessSection("ADMIN", "dashboard")).toBe(true);
+    expect(canAccessSection("ADMIN", "intake")).toBe(false);
+    expect(canAccessSection("ADMIN", "dispatch")).toBe(false);
+    expect(canAccessSection("ADMIN", "jobs")).toBe(false);
+    expect(canAccessSection("ADMIN", "finance")).toBe(false);
+    expect(canAccessSection("ADMIN", "expenses")).toBe(false);
+    expect(canAccessSection("ADMIN", "teamEntries")).toBe(false);
+    expect(canAccessSection("ADMIN", "partner")).toBe(false);
   });
 
-  test("allows operators to use intake and dispatch", () => {
-    expect(canAccessSection("DISPATCHER", "intake")).toBe(true);
+  test("reserves intake for data entry while allowing dispatch work", () => {
+    expect(canAccessSection("DATA_ENTRY", "intake")).toBe(true);
+    expect(canAccessSection("ADMIN", "intake")).toBe(false);
+    expect(canAccessSection("DISPATCHER", "intake")).toBe(false);
     expect(canAccessSection("DATA_ENTRY", "dispatch")).toBe(true);
     expect(canAccessSection("PARTNER_VIEWER", "dispatch")).toBe(false);
   });

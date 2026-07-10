@@ -1,31 +1,17 @@
-import { OperationsShell, WorkflowPanel } from "@/components/operations-shell";
+import { JobsWorkspace } from "@/components/operations/jobs-workspace";
 import { requireRole } from "@/src/lib/auth/guards";
+import { db } from "@/src/lib/db";
 
 export default async function JobsPage() {
-  await requireRole(["ADMIN", "DISPATCHER", "DATA_ENTRY", "TEAM_LEAD", "VIEWER"]);
+  const session = await requireRole(["DISPATCHER", "DATA_ENTRY", "TEAM_LEAD", "VIEWER"]);
+  const teamScope = session.user.role === "TEAM_LEAD" ? session.user.teamId ?? "__unassigned_team__" : undefined;
+  const jobs = await db.job.findMany({
+    where: { assignedTeamId: teamScope },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    select: { id: true, serviceType: true, status: true, paymentStatus: true, customer: { select: { name: true } }, address: { select: { rawAddress: true } }, assignedTeam: { select: { name: true } } },
+  });
+  const isTeamLead = session.user.role === "TEAM_LEAD";
 
-  return (
-    <OperationsShell
-      title="Jobs"
-      description="Track customer jobs from booking through service confirmation, payment, invoice, and feedback."
-      roleLabel="Jobs view"
-      activePath="/jobs"
-      metrics={[
-        { label: "Open jobs", value: "18", detail: "Booked through in progress" },
-        { label: "Need closeout", value: "4", detail: "Performed/payment check missing" },
-        { label: "Ready to invoice", value: "6", detail: "Service confirmed" },
-      ]}
-      rows={[
-        { id: "JOB-1028", primary: "Customer review pending", secondary: "Raw WhatsApp message retained", status: "Booked" },
-        { id: "JOB-1029", primary: "Walk-in WhatsApp lead", secondary: "Payment unpaid", status: "Assigned" },
-        { id: "JOB-1030", primary: "Sender job", secondary: "Split payment recorded", status: "In progress" },
-      ]}
-    >
-      <WorkflowPanel
-        title="Closeout requirements"
-        description="Jobs cannot become complete until the work and payment outcome are both recorded."
-        items={["Performed status", "Payment handling", "Invoice after service"]}
-      />
-    </OperationsShell>
-  );
+  return <main className="min-h-screen bg-muted/30 px-4 py-6 md:px-8 md:py-10"><div className="mx-auto grid max-w-7xl gap-6"><header><h1 className="text-2xl font-semibold">{isTeamLead ? "My team jobs" : "Jobs"}</h1><p className="mt-1 text-sm text-muted-foreground">{isTeamLead ? "Only jobs assigned to your team are visible here." : "Review live job records and record a complete, auditable closeout."}</p></header><JobsWorkspace canCloseout={["DATA_ENTRY", "DISPATCHER"].includes(session.user.role)} readOnlyMessage={isTeamLead && !session.user.teamId ? "Your account is not assigned to a team yet. Ask an administrator to set your team before using the worklist." : undefined} jobs={jobs.map((job) => ({ id: job.id, customer: job.customer.name, address: job.address.rawAddress, serviceType: job.serviceType, status: job.status, paymentStatus: job.paymentStatus, team: job.assignedTeam?.name ?? null }))} /></div></main>;
 }

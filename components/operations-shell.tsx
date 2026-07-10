@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { UserRole } from "@/src/generated/prisma/enums";
+import { auth } from "@/auth";
 import { cn } from "@/lib/utils";
 
 type WorkspaceMetric = {
@@ -48,17 +49,16 @@ type OperationsShellProps = {
 
 const navItems: Array<{ label: string; href: string; roles: UserRole[] }> = [
   { label: "Dashboard", href: "/", roles: ["ADMIN"] },
-  { label: "Intake", href: "/jobs/intake", roles: ["ADMIN", "DISPATCHER", "DATA_ENTRY"] },
-  { label: "Dispatch", href: "/dispatch", roles: ["ADMIN", "DISPATCHER", "DATA_ENTRY"] },
-  { label: "Jobs", href: "/jobs", roles: ["ADMIN", "DISPATCHER", "DATA_ENTRY", "TEAM_LEAD", "VIEWER"] },
-  { label: "Team updates", href: "/team-entries", roles: ["ADMIN", "DATA_ENTRY"] },
+  { label: "Intake", href: "/jobs/intake", roles: ["DATA_ENTRY"] },
+  { label: "Dispatch", href: "/dispatch", roles: ["DISPATCHER", "DATA_ENTRY"] },
+  { label: "Jobs", href: "/jobs", roles: ["DISPATCHER", "DATA_ENTRY", "TEAM_LEAD", "VIEWER"] },
+  { label: "Team updates", href: "/team-entries", roles: ["DATA_ENTRY"] },
   { label: "Team mobile", href: "/team", roles: ["TEAM_LEAD"] },
-  { label: "Finance", href: "/finance", roles: ["ADMIN"] },
-  { label: "Expenses", href: "/expenses", roles: ["ADMIN", "DATA_ENTRY"] },
-  { label: "Partner", href: "/partner", roles: ["ADMIN", "PARTNER_VIEWER"] },
+  { label: "Expenses", href: "/expenses", roles: ["DATA_ENTRY"] },
+  { label: "Partner", href: "/partner", roles: ["PARTNER_VIEWER"] },
 ];
 
-export function OperationsShell({
+export async function OperationsShell({
   title,
   description,
   roleLabel,
@@ -67,6 +67,8 @@ export function OperationsShell({
   rows,
   children,
 }: OperationsShellProps) {
+  const session = await auth();
+  const role = session?.user?.role;
   return (
     <main className="min-h-screen bg-muted/30 text-foreground">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
@@ -82,7 +84,7 @@ export function OperationsShell({
           </div>
 
           <nav className="mt-6 flex gap-1 overflow-x-auto lg:flex-col">
-            {navItems.map((item) => (
+            {navItems.filter((item) => role && item.roles.includes(role)).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

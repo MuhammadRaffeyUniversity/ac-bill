@@ -2,7 +2,7 @@ import { OperationsShell, WorkflowPanel } from "@/components/operations-shell";
 import { requireRole } from "@/src/lib/auth/guards";
 
 export default async function PartnerPage() {
-  await requireRole(["ADMIN", "PARTNER_VIEWER"]);
+  await requireRole(["PARTNER_VIEWER"]);
 
   return (
     <OperationsShell

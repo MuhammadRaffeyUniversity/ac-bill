@@ -13,14 +13,14 @@ export type AppSection =
 
 const sectionRoles = {
   dashboard: ["ADMIN"],
-  intake: ["ADMIN", "DISPATCHER", "DATA_ENTRY"],
-  dispatch: ["ADMIN", "DISPATCHER", "DATA_ENTRY"],
-  jobs: ["ADMIN", "DISPATCHER", "DATA_ENTRY", "TEAM_LEAD", "VIEWER"],
-  finance: ["ADMIN"],
-  expenses: ["ADMIN", "DATA_ENTRY"],
+  intake: ["DATA_ENTRY"],
+  dispatch: ["DISPATCHER", "DATA_ENTRY"],
+  jobs: ["DISPATCHER", "DATA_ENTRY", "TEAM_LEAD", "VIEWER"],
+  finance: [],
+  expenses: ["DATA_ENTRY"],
   team: ["TEAM_LEAD"],
-  teamEntries: ["ADMIN", "DATA_ENTRY"],
-  partner: ["ADMIN", "PARTNER_VIEWER"],
+  teamEntries: ["DATA_ENTRY"],
+  partner: ["PARTNER_VIEWER"],
 } satisfies Record<AppSection, UserRole[]>;
 
 const defaultRoutes = {

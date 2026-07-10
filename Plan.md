@@ -35,7 +35,7 @@ Build an internal dashboard, not a public marketing site.
 
 Core users:
 
-- CEO/admin: Ali is the CEO/operator receiving outsourced WhatsApp jobs from a Malaysian company; he sees all financials, expenses, reports, invoices, feedback, and team performance.
+- CEO/admin: Ali is the CEO/operator receiving outsourced WhatsApp jobs from a Malaysian company; his only internal screen is the read-only dashboard. It contains the financial pulse, jobs requiring attention, and operational reporting. Record creation, updates, approval, and all other operational entry actions live in role-specific operator views.
 - Dispatcher/operator: pastes WhatsApp job messages, reviews extracted fields, assigns teams, updates status, and can enter team updates received through WhatsApp.
 - Data-entry operator: records team-submitted WhatsApp updates on behalf of teams, including job completion, payments, expenses, notes, and corrections.
 - Team lead: sees assigned jobs, updates completion, records payments, expenses, photos/notes if added later.
@@ -64,7 +64,7 @@ Core users:
 - Invoices must support print from the browser in MVP.
 - Customer feedback links must be tokenized and public, without exposing internal records.
 - Dashboard reports must support daily, weekly, monthly, and yearly views.
-- Daily, weekly, monthly, and yearly financial/reporting dashboards are CEO-only and must not be visible to dispatchers, team leads, partners, or customers.
+- Daily, weekly, monthly, and yearly financial reporting is presented within the CEO dashboard and must not be visible to dispatchers, team leads, partners, or customers.
 
 ## Data Model
 
@@ -107,9 +107,9 @@ Create these tables through Prisma migrations.
 
 Provider decision: use Auth.js credentials authentication for internal staff accounts. Staff users are stored in Neon through the `User` table, including role, active status, optional team assignment, and password hash. Route access is role-gated on the server:
 
-- CEO/admin: dashboard, finance, expenses, dispatch, intake, jobs, team entries, and partner reports.
+- CEO/admin: the dashboard only. It is a read-only monitor for financials, jobs, reports, and operational exceptions; the CEO has no separate intake, dispatch, jobs, finance, expense, team-entry, or partner screen.
 - Dispatcher/operator: intake, dispatch, and jobs.
-- Data-entry operator: intake, dispatch, jobs, expenses, and team-submitted WhatsApp entries.
+- Data-entry operator: the only role permitted to perform WhatsApp intake, create reviewed jobs, and record or review team-submitted WhatsApp entries. They may also use dispatch, jobs, expenses, and the one-time team setup screen needed to register the final confirmed six teams for those operational records.
 - Team lead: team mobile worklist and assigned job records only.
 - Partner viewer: sender commission report only.
 - Customer invoice and feedback pages remain public token routes and do not require login.
@@ -364,13 +364,13 @@ canCloseJob =
 - Create: `src/lib/dispatch/team-suggestion.ts`
 - Create: `src/lib/team-entries/actions.ts`
 
-- [ ] Save reviewed intake as a job.
-- [ ] Add status transitions with history.
-- [ ] Add a job closeout step for performed/not performed, completion notes, and payment status.
-- [ ] Add a data-entry screen where operators can enter team-submitted WhatsApp updates for job completion, payments, expenses, and notes.
-- [ ] Store raw team WhatsApp update text, submitting team/member, entered-by operator, related job, and review status.
+- [x] Save reviewed intake as a job.
+- [x] Add status transitions with history.
+- [x] Add a job closeout step for performed/not performed, completion notes, and payment status.
+- [x] Add a data-entry screen where operators can enter team-submitted WhatsApp updates for job completion, payments, expenses, and notes.
+- [x] Store raw team WhatsApp update text, submitting team/member, entered-by operator, related job, and review status.
 - [ ] Suggest teams by service area and workload.
-- [ ] Allow manual assignment override.
+- [x] Allow manual assignment override.
 - [ ] Add filters by date, team, status, and service type.
 
 ### Task 6: Invoices, Payments, and Feedback
@@ -434,7 +434,7 @@ canCloseJob =
 - [ ] Restrict finance and expenses to admin/CEO users.
 - [ ] Restrict daily, weekly, monthly, and yearly dashboard reports to admin/CEO users only.
 - [ ] Allow dispatchers to create and assign jobs.
-- [ ] Allow data-entry operators to enter team-submitted WhatsApp updates for any team without granting CEO-only report access.
+- [x] Allow data-entry operators to enter team-submitted WhatsApp updates for any team without granting CEO-only report access.
 - [ ] Allow team leads to update only their assigned jobs.
 - [ ] Keep invoice and feedback token routes public but read-limited.
 
