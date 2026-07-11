@@ -12,6 +12,7 @@ const dataEntryLinks = [
   { href: "/dispatch", label: "Dispatch", icon: LayoutDashboardIcon, roles: ["DATA_ENTRY", "DISPATCHER"] as const },
   { href: "/jobs", label: "Jobs", icon: FileTextIcon, roles: ["DATA_ENTRY", "DISPATCHER", "TEAM_LEAD", "VIEWER"] as const },
   { href: "/team-entries", label: "Team updates", icon: UsersRoundIcon, roles: ["DATA_ENTRY"] as const },
+  { href: "/invoices", label: "Invoices", icon: ReceiptTextIcon, roles: ["DATA_ENTRY", "DISPATCHER"] as const },
   { href: "/expenses", label: "Expenses", icon: ReceiptTextIcon, roles: ["DATA_ENTRY"] as const },
   { href: "/team-setup", label: "Teams", icon: Settings2Icon, roles: ["DATA_ENTRY"] as const },
 ] as const;

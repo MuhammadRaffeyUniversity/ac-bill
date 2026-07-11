@@ -11,6 +11,7 @@ type FormSelectProps = {
   defaultValue?: string | null;
   disabled?: boolean;
   id?: string;
+  labelForValue?: (value: string | null) => React.ReactNode;
   name: string;
   onValueChange?: (value: string | null) => void;
   placeholder: string;
@@ -18,9 +19,9 @@ type FormSelectProps = {
   value?: string | null;
 };
 
-function FormSelect({ children, className, defaultValue, disabled, id, name, onValueChange, placeholder, required, value }: FormSelectProps) {
+function FormSelect({ children, className, defaultValue, disabled, id, labelForValue, name, onValueChange, placeholder, required, value }: FormSelectProps) {
   return <Select defaultValue={defaultValue} disabled={disabled} id={id} name={name} onValueChange={onValueChange} required={required} value={value}>
-    <SelectTrigger className={cn("w-full", className)}><SelectValue placeholder={placeholder} /></SelectTrigger>
+    <SelectTrigger className={cn("w-full", className)}>{labelForValue ? <SelectValue>{(selectedValue) => labelForValue(typeof selectedValue === "string" ? selectedValue : null)}</SelectValue> : <SelectValue placeholder={placeholder} />}</SelectTrigger>
     <SelectContent>{children}</SelectContent>
   </Select>;
 }

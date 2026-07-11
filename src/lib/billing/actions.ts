@@ -12,7 +12,6 @@ import { requireRole } from "@/src/lib/auth/guards";
 import { db } from "@/src/lib/db";
 
 export type BillingActionState = { error?: string; success?: string; invoiceId?: string };
-export const initialBillingActionState: BillingActionState = {};
 
 const allowedRoles = ["DATA_ENTRY", "DISPATCHER"] as const;
 const invoiceInclude = {
