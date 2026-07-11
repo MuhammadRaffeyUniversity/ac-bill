@@ -5,6 +5,8 @@ import { BanknoteArrowDownIcon, BanknoteArrowUpIcon, LandmarkIcon } from "lucide
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormSelect } from "@/components/ui/form-select";
+import { SelectItem } from "@/components/ui/select";
 import { createCompanyExpense, createPersonalExpense, createPettyCashEntry, type LedgerActionState } from "@/src/lib/ledger/actions";
 
 type Expense = { id: string; date: string; category: string | null; amount: number };
@@ -24,7 +26,7 @@ function ExpenseCard({ title, description, icon: Icon, action, entryDate, catego
     <Field label="Date"><input name="date" type="date" defaultValue={entryDate} required className={controlClass} /></Field>
     <Field label="Amount (MYR)"><input name="amount" type="number" min="0.01" step="0.01" required className={controlClass} /></Field>
     <Field label="Category"><input name="category" required={categoryRequired} maxLength={100} placeholder={categoryPlaceholder} className={controlClass} /></Field>
-    {title === "Company expenses" ? <Field label="Payment method"><select name="paymentMethod" className={controlClass}><option value="">Not recorded</option><option value="CASH">Cash</option><option value="ONLINE">Online</option><option value="CARD">Card</option><option value="OTHER">Other</option></select></Field> : null}
+    {title === "Company expenses" ? <Field label="Payment method"><FormSelect name="paymentMethod" placeholder="Not recorded"><SelectItem value="">Not recorded</SelectItem><SelectItem value="CASH">Cash</SelectItem><SelectItem value="ONLINE">Online</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem></FormSelect></Field> : null}
     <Field label="Description"><textarea name="description" maxLength={1000} className={`${controlClass} min-h-16 resize-y`} /></Field>
     <Field label="Note"><textarea name="notes" maxLength={2000} className={`${controlClass} min-h-16 resize-y`} /></Field>
     <Notice state={state} /><Button type="submit" disabled={isPending}>{isPending ? "Saving..." : submitLabel}</Button>
@@ -36,7 +38,7 @@ function PettyCashCard({ entryDate, entries }: { entryDate: string; entries: Cas
   const latestBalance = entries[0]?.balanceAfter ?? 0;
   return <Card className="h-fit"><CardHeader><BanknoteArrowUpIcon className="mb-2 size-5 text-primary" /><CardTitle>Petty cash</CardTitle><CardDescription>Current recorded balance: RM {latestBalance.toFixed(2)}</CardDescription></CardHeader><CardContent className="grid gap-5"><form action={formAction} className="grid gap-3">
     <Field label="Date"><input name="date" type="date" defaultValue={entryDate} required className={controlClass} /></Field>
-    <Field label="Direction"><select name="direction" className={controlClass}><option value="IN">Cash in</option><option value="OUT">Cash out</option></select></Field>
+    <Field label="Direction"><FormSelect name="direction" defaultValue="IN" placeholder="Select direction"><SelectItem value="IN">Cash in</SelectItem><SelectItem value="OUT">Cash out</SelectItem></FormSelect></Field>
     <Field label="Amount (MYR)"><input name="amount" type="number" min="0.01" step="0.01" required className={controlClass} /></Field>
     <Field label="Source type"><input name="sourceType" maxLength={100} placeholder="Float, reimbursement, purchase" className={controlClass} /></Field>
     <Field label="Note"><textarea name="note" maxLength={2000} className={`${controlClass} min-h-16 resize-y`} /></Field>

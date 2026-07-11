@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createOpenAiIntakeRequest, createTimeoutSignal, normalizeWhatsAppExtraction } from "./parse-whatsapp-message";
+import { createOpenAiIntakeRequest, createTimeoutSignal, describeOpenAiError, normalizeWhatsAppExtraction } from "./parse-whatsapp-message";
 
 describe("normalizeWhatsAppExtraction", () => {
   it("normalizes a Malaysian mobile number and preserves missing required fields", () => {
@@ -72,5 +72,14 @@ describe("createOpenAiIntakeRequest", () => {
       model: "gpt-5.6-luna",
       response_format: { type: "json_schema", json_schema: { strict: true } },
     });
+    expect(JSON.parse(request.init.body as string)).not.toHaveProperty("temperature");
+  });
+});
+
+describe("describeOpenAiError", () => {
+  it("preserves OpenAI's safe public error message and status", () => {
+    expect(describeOpenAiError(400, { error: { message: "Unsupported parameter: temperature" } })).toBe(
+      "OpenAI request failed (400): Unsupported parameter: temperature",
+    );
   });
 });

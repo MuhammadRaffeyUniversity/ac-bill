@@ -5,7 +5,9 @@ import { Building2Icon, MapPinnedIcon, PlusIcon, UsersRoundIcon } from "lucide-r
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormSelect } from "@/components/ui/form-select";
 import { Input } from "@/components/ui/input";
+import { SelectItem } from "@/components/ui/select";
 import { createTeam, type TeamSetupActionState } from "@/src/lib/team-setup/actions";
 
 const initialTeamSetupActionState: TeamSetupActionState = {};
@@ -56,10 +58,10 @@ export function TeamSetupWorkspace({ teams }: { teams: Team[] }) {
             </div>
             <div className="grid gap-1.5">
               <label className="text-sm font-medium" htmlFor="compensationType">Compensation</label>
-              <select id="compensationType" name="compensationType" className={selectClassName} defaultValue={canAddSalary ? "SALARY" : "COMMISSION"}>
-                <option value="SALARY" disabled={!canAddSalary}>Salary</option>
-                <option value="COMMISSION" disabled={!canAddCommission}>Commission</option>
-              </select>
+              <FormSelect id="compensationType" name="compensationType" defaultValue={canAddSalary ? "SALARY" : "COMMISSION"} placeholder="Select compensation type">
+                <SelectItem value="SALARY" disabled={!canAddSalary}>Salary</SelectItem>
+                <SelectItem value="COMMISSION" disabled={!canAddCommission}>Commission</SelectItem>
+              </FormSelect>
             </div>
             <div className="grid gap-1.5">
               <label className="text-sm font-medium" htmlFor="serviceAreaTags">Service areas <span className="font-normal text-muted-foreground">(optional)</span></label>
@@ -91,5 +93,3 @@ function TeamGroup({ title, count, teams }: { title: string; count: number; team
 function TeamRow({ team }: { team: Team }) {
   return <div className="grid gap-1 border-b border-border pb-3 last:border-0 last:pb-0"><p className="font-medium">{team.name}</p>{team.region ? <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPinnedIcon className="size-3.5" />{team.region}</p> : null}{team.serviceAreaTags.length ? <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Building2Icon className="size-3.5" />{team.serviceAreaTags.join(", ")}</p> : null}</div>;
 }
-
-const selectClassName = "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";

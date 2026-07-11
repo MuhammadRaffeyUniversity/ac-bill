@@ -95,7 +95,6 @@ export function createOpenAiIntakeRequest({
       },
       body: JSON.stringify({
         model,
-        temperature: 0,
         messages: [
           {
             role: "system",
@@ -115,6 +114,17 @@ export function createOpenAiIntakeRequest({
       }),
     } satisfies RequestInit,
   };
+}
+
+export function describeOpenAiError(status: number, body: unknown) {
+  const message =
+    typeof body === "object" && body !== null && "error" in body &&
+    typeof body.error === "object" && body.error !== null && "message" in body.error &&
+    typeof body.error.message === "string"
+      ? body.error.message
+      : "The provider rejected this parsing request.";
+
+  return `OpenAI request failed (${status}): ${message}`;
 }
 
 export async function parseWhatsAppMessage(rawText: string) {
@@ -142,7 +152,15 @@ export async function parseWhatsAppMessage(rawText: string) {
   }
 
   if (!response.ok) {
-    throw new Error("OpenAI could not parse this message. Please try again.");
+    let errorBody: unknown = null;
+
+    try {
+      errorBody = await response.json();
+    } catch {
+      // The status remains actionable even if the provider did not return JSON.
+    }
+
+    throw new Error(describeOpenAiError(response.status, errorBody));
   }
 
   const completion = (await response.json()) as {

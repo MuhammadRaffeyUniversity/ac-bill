@@ -9,15 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
-const sampleMessage = `July 08, 2026 at 02:00 PM (Asia/Kuala Lumpur)
-
-Faridah binti mat taib
-+60 19-756 3236
-No 46 jln mawar 56 taman mawar pasir gudang johor
-How many aircond units? 1
-Service, Install or Repair? Service`;
 
 const fieldLabels: Record<string, string> = {
   customerName: "Customer name",
@@ -77,14 +70,7 @@ export function IntakeWorkspace() {
             placeholder="Paste the complete customer WhatsApp message here..."
             className="min-h-80 resize-y font-mono text-sm leading-6"
           />
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <button
-              type="button"
-              className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-              onClick={() => setRawText(sampleMessage)}
-            >
-              Load a sample message
-            </button>
+          <div className="flex justify-end">
             <Button type="button" onClick={parseMessage} disabled={rawText.trim().length < 20 || isParsing}>
               {isParsing ? <LoaderCircleIcon className="animate-spin" data-icon="inline-start" /> : <SparklesIcon data-icon="inline-start" />}
               {isParsing ? "Parsing..." : "Parse booking details"}
@@ -120,7 +106,7 @@ export function IntakeWorkspace() {
                 {extraction.missingFields.length ? (
                   <div className="flex flex-wrap gap-1.5">
                     {extraction.missingFields.map((field) => (
-                      <Badge key={field} variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
+                      <Badge key={field} variant="outline" className="border-primary/30 bg-primary/10 text-foreground">
                         {fieldLabels[field] ?? field}
                       </Badge>
                     ))}
@@ -141,9 +127,14 @@ export function IntakeWorkspace() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Units"><Input name="unitsCount" type="number" min="1" required value={extraction.unitsCount ?? ""} onChange={(event) => setExtraction((current) => current ? { ...current, unitsCount: Number(event.target.value) || null } : current)} /></Field>
                 <Field label="Service type">
-                  <select name="serviceType" required value={extraction.serviceType ?? ""} onChange={(event) => setExtraction((current) => current ? { ...current, serviceType: (event.target.value || null) as WhatsAppExtraction["serviceType"] } : current)} className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50">
-                    <option value="">Choose type</option><option value="SERVICE">Service</option><option value="INSTALL">Install</option><option value="REPAIR">Repair</option>
-                  </select>
+                  <Select name="serviceType" required value={extraction.serviceType} onValueChange={(value) => setExtraction((current) => current ? { ...current, serviceType: value as WhatsAppExtraction["serviceType"] } : current)}>
+                    <SelectTrigger className="w-full"><SelectValue placeholder="Choose type" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="SERVICE">Service</SelectItem>
+                      <SelectItem value="INSTALL">Install</SelectItem>
+                      <SelectItem value="REPAIR">Repair</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </Field>
               </div>
               <details className="text-sm text-muted-foreground"><summary className="cursor-pointer font-medium text-foreground">Timing details</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><Field label="Requested at"><Input name="requestedAt" value={extraction.requestedAt ?? ""} onChange={(event) => updateTextField("requestedAt", event.target.value)} /></Field><Field label="Timezone"><Input name="timezone" value={extraction.timezone ?? ""} onChange={(event) => updateTextField("timezone", event.target.value)} /></Field></div></details>

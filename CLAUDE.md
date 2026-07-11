@@ -24,6 +24,7 @@ This repository is for an AC company operations site. The product plan is in `Pl
 - Use TypeScript, Zod schemas, and server-side validation.
 - Keep money calculations in pure functions with tests.
 - Keep LLM output schemas strict and reviewed by a human before persistence.
+- Prefer the existing shadcn components and their theme tokens before creating custom UI controls or hardcoding visual styles.
 - Avoid broad rewrites of the Next.js scaffold unless needed for the current task.
 - Preserve existing user work and do not revert unrelated files.
 - Do not add speculative features such as live WhatsApp API ingestion, GPS tracking, payroll, or maps unless the user asks.

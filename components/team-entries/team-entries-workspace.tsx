@@ -14,6 +14,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormSelect } from "@/components/ui/form-select";
+import { SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createTeamEntry, reviewTeamEntry, type TeamEntryActionState } from "@/src/lib/team-entries/actions";
 import { teamEntryTypes } from "@/src/lib/team-entries/schema";
@@ -118,30 +120,30 @@ export function TeamEntriesWorkspace({ canEdit, operatorName, teams, members, jo
                 <div className="grid content-start gap-4">
                   <div className="grid gap-1.5">
                     <label htmlFor="entryType" className="text-sm font-medium">Update type</label>
-                    <select id="entryType" name="entryType" defaultValue="COMPLETION" className={selectClassName}>
-                      {teamEntryTypes.map((type) => <option key={type} value={type}>{entryTypeLabels[type]}</option>)}
-                    </select>
+                    <FormSelect id="entryType" name="entryType" defaultValue="COMPLETION" placeholder="Select update type">
+                      {teamEntryTypes.map((type) => <SelectItem key={type} value={type}>{entryTypeLabels[type]}</SelectItem>)}
+                    </FormSelect>
                   </div>
                   <div className="grid gap-1.5">
                     <label htmlFor="teamId" className="text-sm font-medium">Team</label>
-                    <select id="teamId" name="teamId" required value={selectedTeamId} onChange={(event) => setSelectedTeamId(event.target.value)} className={selectClassName}>
-                      <option value="">Choose team</option>
-                      {teams.map((team) => <option key={team.id} value={team.id}>{team.name}{team.region ? ` - ${team.region}` : ""}</option>)}
-                    </select>
+                    <FormSelect id="teamId" name="teamId" required value={selectedTeamId} onValueChange={(value) => setSelectedTeamId(value ?? "")} placeholder="Choose team">
+                      <SelectItem value="">Choose team</SelectItem>
+                      {teams.map((team) => <SelectItem key={team.id} value={team.id}>{team.name}{team.region ? ` - ${team.region}` : ""}</SelectItem>)}
+                    </FormSelect>
                   </div>
                   <div className="grid gap-1.5">
                     <label htmlFor="submittedByMemberId" className="text-sm font-medium">Submitted by <span className="font-normal text-muted-foreground">(optional)</span></label>
-                    <select id="submittedByMemberId" name="submittedByMemberId" disabled={!selectedTeamId || !availableMembers.length} className={selectClassName}>
-                      <option value="">{selectedTeamId ? "Not specified" : "Choose a team first"}</option>
-                      {availableMembers.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
-                    </select>
+                    <FormSelect id="submittedByMemberId" name="submittedByMemberId" disabled={!selectedTeamId || !availableMembers.length} placeholder={selectedTeamId ? "Not specified" : "Choose a team first"}>
+                      <SelectItem value="">{selectedTeamId ? "Not specified" : "Choose a team first"}</SelectItem>
+                      {availableMembers.map((member) => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}
+                    </FormSelect>
                   </div>
                   <div className="grid gap-1.5">
                     <label htmlFor="jobId" className="text-sm font-medium">Related job <span className="font-normal text-muted-foreground">(optional)</span></label>
-                    <select id="jobId" name="jobId" disabled={!selectedTeamId} className={selectClassName}>
-                      <option value="">{selectedTeamId ? "No linked job" : "Choose a team first"}</option>
-                      {availableJobs.map((job) => <option key={job.id} value={job.id}>{job.customerName} - {job.serviceType.toLowerCase()}</option>)}
-                    </select>
+                    <FormSelect id="jobId" name="jobId" disabled={!selectedTeamId} placeholder={selectedTeamId ? "No linked job" : "Choose a team first"}>
+                      <SelectItem value="">{selectedTeamId ? "No linked job" : "Choose a team first"}</SelectItem>
+                      {availableJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.customerName} - {job.serviceType.toLowerCase()}</SelectItem>)}
+                    </FormSelect>
                   </div>
                   <div className="grid gap-1.5">
                     <label htmlFor="entryDate" className="text-sm font-medium">Update date</label>
@@ -234,4 +236,3 @@ function capitalize(value: string) { return `${value.slice(0, 1)}${value.slice(1
 function formatEntryDate(value: string) { return new Intl.DateTimeFormat("en-MY", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value)); }
 
 const inputClassName = "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
-const selectClassName = `${inputClassName} [color-scheme:light] dark:[color-scheme:dark]`;

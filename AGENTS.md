@@ -55,6 +55,7 @@ Ali is the CEO/operator. The company receives outsourced WhatsApp clients from a
 - Build the actual operations dashboard as the first screen, not a marketing landing page.
 - Keep the interface dense, scannable, and work-focused.
 - Use clear forms, filters, tables, status badges, print views, and dialogs.
+- Prefer the existing shadcn components and their theme tokens before creating custom UI controls or hardcoding visual styles.
 - Avoid decorative hero sections and oversized marketing cards.
 - Make mobile layouts usable for team leads in the field.
 
