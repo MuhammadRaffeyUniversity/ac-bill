@@ -12,7 +12,7 @@ export default async function TeamEntriesPage() {
       orderBy: { createdAt: "desc" },
       take: 30,
       select: {
-        id: true, entryType: true, rawWhatsAppText: true, notes: true, entryDate: true, reviewStatus: true,
+        id: true, entryType: true, rawWhatsAppText: true, parsedFields: true, notes: true, entryDate: true, reviewStatus: true,
         team: { select: { name: true } },
         submittedByMember: { select: { name: true } },
         enteredByOperator: { select: { name: true } },
@@ -32,6 +32,7 @@ export default async function TeamEntriesPage() {
           jobs={jobs.map((job) => ({ id: job.id, customerName: job.customer.name, serviceType: job.serviceType, assignedTeamId: job.assignedTeamId, createdAt: job.createdAt.toISOString() }))}
           entries={entries.map((entry) => ({
             id: entry.id, entryType: entry.entryType, rawWhatsAppText: entry.rawWhatsAppText, notes: entry.notes,
+            manualCompletion: getManualCompletion(entry.parsedFields),
             entryDate: entry.entryDate.toISOString(), reviewStatus: entry.reviewStatus, teamName: entry.team.name,
             memberName: entry.submittedByMember?.name ?? null, operatorName: entry.enteredByOperator?.name ?? null,
             jobLabel: entry.job ? `${entry.job.customer.name} - ${entry.job.serviceType.toLowerCase()}` : null,
@@ -41,4 +42,11 @@ export default async function TeamEntriesPage() {
       </div>
     </main>
   );
+}
+
+function getManualCompletion(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const fields = value as { source?: unknown; completedAmount?: unknown; paymentMethod?: unknown };
+  if (fields.source !== "MANUAL_DATA_ENTRY" || typeof fields.completedAmount !== "number" || typeof fields.paymentMethod !== "string") return null;
+  return { completedAmount: fields.completedAmount, paymentMethod: fields.paymentMethod };
 }

@@ -10,6 +10,8 @@ const validEntry = {
   jobId: "",
   entryDate: "2026-07-10",
   notes: "",
+  completedAmount: "",
+  paymentMethod: "",
 };
 
 describe("createTeamEntrySchema", () => {
@@ -31,5 +33,20 @@ describe("createTeamEntrySchema", () => {
     const result = createTeamEntrySchema.safeParse({ ...validEntry, teamId: "" });
 
     expect(result.success).toBe(false);
+  });
+
+  it("requires a linked job and manually entered amount for a completion update", () => {
+    const missingJob = createTeamEntrySchema.safeParse({ ...validEntry, entryType: "COMPLETION", completedAmount: "75" });
+    const missingAmount = createTeamEntrySchema.safeParse({ ...validEntry, entryType: "COMPLETION", jobId: "job_1" });
+
+    expect(missingJob.success).toBe(false);
+    expect(missingAmount.success).toBe(false);
+  });
+
+  it("accepts an operator-entered completion amount and payment method without parsing the WhatsApp text", () => {
+    const parsed = createTeamEntrySchema.parse({ ...validEntry, entryType: "COMPLETION", jobId: "job_1", completedAmount: "75", paymentMethod: "CASH" });
+
+    expect(parsed.completedAmount).toBe(75);
+    expect(parsed.paymentMethod).toBe("CASH");
   });
 });

@@ -478,6 +478,9 @@ model Feedback {
   customerId              String
   token                   String    @unique
   rating                  Int?
+  paidAmount              Decimal?  @db.Decimal(12, 2)
+  paymentMethod           PaymentMethod?
+  acCooling               Boolean?
   comment                 String?
   submittedAt             DateTime?
   publicDisplayPermission Boolean   @default(false)

@@ -27,6 +27,7 @@ type Entry = {
   id: string;
   entryType: string;
   rawWhatsAppText: string;
+  manualCompletion: { completedAmount: number; paymentMethod: string } | null;
   notes: string | null;
   entryDate: string;
   reviewStatus: "PENDING" | "APPROVED" | "REJECTED";
@@ -145,6 +146,12 @@ export function TeamEntriesWorkspace({ canEdit, operatorName, teams, members, jo
                       {availableJobs.map((job) => <SelectItem key={job.id} value={job.id}>{job.customerName} - {job.serviceType.toLowerCase()}</SelectItem>)}
                     </FormSelect>
                   </div>
+                  <div className="grid gap-1.5 rounded-md border border-primary/20 bg-primary/5 p-3">
+                    <p className="text-sm font-medium">Completion details <span className="font-normal text-muted-foreground">(manual only)</span></p>
+                    <p className="text-xs text-muted-foreground">Required only for a completion update. Do not infer these values from the WhatsApp text.</p>
+                    <label className="grid gap-1.5 text-sm">Amount reported (RM)<input id="completedAmount" name="completedAmount" type="number" min="0" step="0.01" className={inputClassName} placeholder="0.00" /></label>
+                    <label className="grid gap-1.5 text-sm">Payment method<FormSelect id="paymentMethod" name="paymentMethod" placeholder="Choose if this is a completion"><SelectItem value="">Not entered</SelectItem><SelectItem value="CASH">Cash</SelectItem><SelectItem value="ONLINE">Online bank transfer</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem></FormSelect></label>
+                  </div>
                   <div className="grid gap-1.5">
                     <label htmlFor="entryDate" className="text-sm font-medium">Update date</label>
                     <input id="entryDate" name="entryDate" type="date" required defaultValue={entryDate} className={inputClassName} />
@@ -200,6 +207,7 @@ function EntryTable({ entries, canEdit }: { entries: Entry[]; canEdit: boolean }
                   <div className="flex items-center gap-2"><MessageSquareTextIcon className="size-4 shrink-0 text-muted-foreground" /><span className="font-medium">{entryTypeLabels[entry.entryType as keyof typeof entryTypeLabels] ?? entry.entryType}</span></div>
                   <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{entry.rawWhatsAppText}</p>
                   {entry.notes ? <p className="mt-2 text-xs text-foreground/80">Note: {entry.notes}</p> : null}
+                  {entry.manualCompletion ? <p className="mt-2 text-xs font-medium text-foreground">Manual completion: RM {entry.manualCompletion.completedAmount.toFixed(2)} · {entry.manualCompletion.paymentMethod}</p> : null}
                 </td>
                 <td className="px-4 py-3"><p className="font-medium">{entry.teamName}</p><p className="mt-1 text-xs text-muted-foreground">{entry.jobLabel ?? "No linked job"}</p></td>
                 <td className="px-4 py-3"><p>{entry.memberName ?? "Team sender not specified"}</p><p className="mt-1 text-xs text-muted-foreground">Entered by {entry.operatorName ?? "Unknown operator"}</p></td>

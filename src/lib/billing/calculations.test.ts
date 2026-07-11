@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { feedbackSchema } from "./schema";
 import { calculateInvoiceTotals, formatInvoiceNumber, getPaymentSummary } from "./calculations";
 
 describe("billing calculations", () => {
@@ -19,5 +20,27 @@ describe("billing calculations", () => {
 
   it("formats sequential monthly invoice numbers", () => {
     expect(formatInvoiceNumber(new Date("2026-07-10T00:00:00.000Z"), 8)).toBe("INV-202607-0008");
+  });
+
+  it("requires the customer verification details from the approved review form", () => {
+    const result = feedbackSchema.safeParse({
+      token: "a".repeat(24),
+      rating: 5,
+      paidAmount: "75",
+      paymentMethod: "CASH",
+      acCooling: "YES",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.paidAmount).toBe(75);
+      expect(result.data.acCooling).toBe("YES");
+    }
+  });
+
+  it("rejects an incomplete customer verification", () => {
+    const result = feedbackSchema.safeParse({ token: "a".repeat(24), rating: 5, paidAmount: "75", paymentMethod: "CASH" });
+
+    expect(result.success).toBe(false);
   });
 });

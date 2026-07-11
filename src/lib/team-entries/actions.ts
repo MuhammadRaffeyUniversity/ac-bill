@@ -25,6 +25,8 @@ export async function createTeamEntry(
     jobId: formData.get("jobId"),
     entryDate: formData.get("entryDate"),
     notes: formData.get("notes"),
+    completedAmount: formData.get("completedAmount"),
+    paymentMethod: formData.get("paymentMethod"),
   });
 
   if (!result.success) {
@@ -60,6 +62,11 @@ export async function createTeamEntry(
       jobId,
       rawWhatsAppText: data.rawWhatsAppText,
       entryType: data.entryType,
+      parsedFields: data.entryType === "COMPLETION" ? {
+        source: "MANUAL_DATA_ENTRY",
+        completedAmount: data.completedAmount,
+        paymentMethod: data.paymentMethod,
+      } : undefined,
       entryDate: data.entryDate,
       notes: data.notes || undefined,
     },

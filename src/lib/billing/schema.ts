@@ -32,6 +32,9 @@ export const recordPaymentsSchema = z.object({
 export const feedbackSchema = z.object({
   token: z.string().trim().min(16).max(200),
   rating: z.coerce.number().int().min(1).max(5),
+  paidAmount: amount,
+  paymentMethod: z.enum(["CASH", "ONLINE", "CARD", "OTHER"]),
+  acCooling: z.enum(["YES", "NO"]),
   comment: z.string().trim().max(2_000).optional().or(z.literal("")),
   publicDisplayPermission: z.boolean().default(false),
 });

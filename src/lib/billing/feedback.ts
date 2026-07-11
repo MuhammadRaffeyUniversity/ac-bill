@@ -13,6 +13,9 @@ export async function submitFeedback(input: unknown) {
     where: { id: feedback.id },
     data: {
       rating: parsed.data.rating,
+      paidAmount: parsed.data.paidAmount,
+      paymentMethod: parsed.data.paymentMethod,
+      acCooling: parsed.data.acCooling === "YES",
       comment: parsed.data.comment || null,
       publicDisplayPermission: parsed.data.publicDisplayPermission,
       submittedAt: new Date(),

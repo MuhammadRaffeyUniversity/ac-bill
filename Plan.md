@@ -6,7 +6,7 @@
 
 **Architecture:** Use the existing Next.js App Router project as the app shell. Store all business records in a relational database with explicit tables for jobs, customers, teams, invoices, payments, commissions, expenses, and feedback. Keep financial calculations in server-side typed functions with tests so the site can replace the current Excel workbook without losing the business logic.
 
-**Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS, Neon PostgreSQL, Prisma, Zod, Auth.js credentials auth with database-backed roles, server actions or route handlers, xAI Grok 4.3 Latest structured JSON extraction for WhatsApp parsing, and HTML print views for invoices in the first release.
+**Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS, Neon PostgreSQL, Prisma, Zod, Auth.js credentials auth with database-backed roles, server actions or route handlers, xAI Grok 4.3 Latest structured JSON extraction for initial customer-job WhatsApp intake only, and customer-ready PDF invoices in the first release.
 
 ---
 
@@ -58,11 +58,14 @@ Core users:
 - A job cannot be marked fully complete until payment collection is recorded as cash, online/account, split payment, unpaid, or cancelled/no-charge.
 - Teams may send job updates and daily entries through WhatsApp instead of logging into the system.
 - A data-entry operator must be able to enter team-submitted WhatsApp updates on behalf of any team, while preserving who submitted the update and who entered it.
+- Team completion updates (for example, "done, RM 75") are entered manually by the data-entry operator. Do not use AI to parse, infer, calculate, or save these updates; keep the raw WhatsApp text as an audit record.
+- After the data-entry operator confirms the completed work, amount, and payment details, they create the customer invoice PDF and send the customer review request.
 - Team expense examples include petrol, car wash, parking, Touch 'n Go, gas, and job supplies.
 - Company expense examples include team rent and other operating expenses.
 - Personal expenses are tracked separately from company expenses and should not silently reduce company profit unless the dashboard explicitly includes a personal-withdrawal view.
-- Invoices must support print from the browser in MVP.
+- Invoices must be generated as customer-ready PDFs after manual completion confirmation. They must include the company details, invoice number/date, bill-to address, service line items, totals, and approved warranty/terms from the supplied invoice sample.
 - Customer feedback links must be tokenized and public, without exposing internal records.
+- The customer review request must cover the supplied review sample's verification fields: total paid amount, payment method, technician rating, and whether the AC is cooling properly.
 - Dashboard reports must support daily, weekly, monthly, and yearly views.
 - Daily, weekly, monthly, and yearly financial reporting is presented within the CEO dashboard and must not be visible to dispatchers, team leads, partners, or customers.
 
@@ -84,7 +87,7 @@ Create these tables through Prisma migrations.
 - `Job`: customer, address, source partner, requested date/time, service type, units count, status, priority, raw WhatsApp text, extraction confidence, assigned team, scheduled window, completion time, cancellation reason, remarks.
 - `JobUnit`: job, unit label, AC type, horsepower, issue, action performed, unit price.
 - `JobStatusHistory`: job, previous status, next status, actor, note, timestamp.
-- `TeamSubmittedEntry`: team, submitted by team member, entered by operator, related job, raw WhatsApp text, entry type, parsed fields, entry date, review status, notes.
+- `TeamSubmittedEntry`: team, submitted by team member, entered by operator, related job, raw WhatsApp text, entry type, manually entered fields, entry date, review status, notes. Team updates are never AI-parsed.
 
 ### Money and Invoices
 
@@ -114,11 +117,11 @@ Provider decision: use Auth.js credentials authentication for internal staff acc
 - Partner viewer: sender commission report only.
 - Customer invoice and feedback pages remain public token routes and do not require login.
 
-## LLM WhatsApp Extraction
+## LLM WhatsApp Extraction for Initial Customer Intake Only
 
 Provider decision: use xAI `grok-4.3-latest` for WhatsApp parsing. The xAI API is OpenAI-compatible at `https://api.x.ai/v1`, authenticated with `XAI_API_KEY`. Keep the model name configurable through `XAI_MODEL` so the deployment can change aliases without code edits.
 
-Build a paste-and-review intake screen.
+Build a paste-and-review intake screen for the initial customer booking message only. It does not process team completion, payment, expense, or daily-entry WhatsApp messages.
 
 Input example:
 
@@ -163,6 +166,7 @@ Validation rules:
 - Preserve the raw WhatsApp text on the job forever for audit.
 - Never let the LLM calculate money silently. Money is entered or selected by the operator/team and calculated by deterministic code.
 - If the LLM cannot confidently parse a field, save the field as empty and show it in `missingFields`.
+- Never send a team-submitted completion update through the LLM. The data-entry operator transcribes its outcome manually, then reviews it before it affects the job, payment, invoice, or finance records.
 
 ## Main Screens
 
@@ -199,9 +203,9 @@ Validation rules:
 - Job closeout: performed/not performed, completion notes, and required payment status.
 - Payments: cash, online, split payments.
 - Expenses tied to the job.
-- Team-submitted WhatsApp updates entered by the operator, including raw message text and entered-by audit details.
-- Invoice preview and print button.
-- Feedback link generator.
+- Manually transcribed team-submitted WhatsApp updates, including raw message text and entered-by audit details; this flow must not call an LLM.
+- Invoice PDF preview/download after manual completion confirmation.
+- Customer review request generator with the supplied payment, technician-rating, and AC-cooling checks.
 
 ### Finance
 
@@ -219,9 +223,9 @@ Validation rules:
 ### Invoice and Feedback
 
 - Internal invoice editor.
-- Invoice creation after service/job completion confirmation.
-- Public printable invoice route using a secure token.
-- Public feedback form using a secure token.
+- Invoice creation after a data-entry operator manually confirms service/job completion, amount, and payment details from the team's WhatsApp update.
+- Customer-ready invoice PDF using the supplied EZY Aircon invoice layout and warranty terms.
+- Public feedback form using a secure token, with the supplied review verification fields.
 - Feedback results visible inside job detail and dashboard.
 
 ## Team Assignment Logic
@@ -387,9 +391,9 @@ canCloseJob =
 - [x] Allow invoice creation only after service/job completion is confirmed, except for admin correction flows.
 - [x] Add invoice line items from job units and manual charges.
 - [x] Add cash, online, and split payments.
-- [x] Build a print-friendly invoice page.
-- [x] Generate public feedback links.
-- [x] Save customer rating/comment from public feedback form.
+- [x] Generate a customer-ready invoice PDF matching the approved EZY Aircon sample layout and warranty/terms.
+- [x] Generate a customer review request with total-paid, payment-method, technician-rating, and AC-cooling fields from the approved sample.
+- [x] Save the submitted review verification and feedback fields from the public customer form.
 
 ### Task 7: Finance and Reports
 
