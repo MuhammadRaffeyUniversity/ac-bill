@@ -36,6 +36,13 @@ const extractionJsonSchema = {
 } as const;
 
 const requiredFieldNames = ["customerName", "phone", "rawAddress", "unitsCount", "serviceType"] as const;
+const INTAKE_PARSE_TIMEOUT_MS = 15_000;
+
+export function createTimeoutSignal(timeoutMs: number) {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
+}
 
 export function normalizeMalaysianPhone(value: string | null) {
   if (!value) return "";
@@ -67,44 +74,75 @@ export function normalizeWhatsAppExtraction(input: unknown): WhatsAppExtraction 
   return { ...normalized, missingFields: [...missingFields] };
 }
 
+export function createOpenAiIntakeRequest({
+  rawText,
+  apiKey,
+  baseUrl,
+  model,
+}: {
+  rawText: string;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+}) {
+  return {
+    url: `${baseUrl.replace(/\/$/, "")}/chat/completions`,
+    init: {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Extract AC service booking details from the raw WhatsApp message. Do not infer or calculate any price, payment, commission, or job completion. Return null for information that is absent or uncertain.",
+          },
+          { role: "user", content: rawText },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "ac_whatsapp_job_extraction",
+            strict: true,
+            schema: extractionJsonSchema,
+          },
+        },
+      }),
+    } satisfies RequestInit,
+  };
+}
+
 export async function parseWhatsAppMessage(rawText: string) {
   const { env } = await import("../env");
 
-  if (!env.XAI_API_KEY) {
-    throw new Error("XAI_API_KEY is not configured.");
+  if (!env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not configured.");
   }
 
-  const response = await fetch(`${env.XAI_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.XAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: env.XAI_MODEL,
-      temperature: 0,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Extract AC service booking details from the raw WhatsApp message. Do not infer or calculate any price, payment, commission, or job completion. Return null for information that is absent or uncertain.",
-        },
-        { role: "user", content: rawText },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "ac_whatsapp_job_extraction",
-          strict: true,
-          schema: extractionJsonSchema,
-        },
-      },
-    }),
-    cache: "no-store",
-  });
+  let response: Response;
+
+  try {
+    const request = createOpenAiIntakeRequest({ rawText, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL, model: env.OPENAI_MODEL });
+    response = await fetch(request.url, {
+      ...request.init,
+      cache: "no-store",
+      signal: createTimeoutSignal(INTAKE_PARSE_TIMEOUT_MS),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("OpenAI took too long to respond. Please try again.");
+    }
+
+    throw error;
+  }
 
   if (!response.ok) {
-    throw new Error("Grok could not parse this message. Please try again.");
+    throw new Error("OpenAI could not parse this message. Please try again.");
   }
 
   const completion = (await response.json()) as {
@@ -113,7 +151,7 @@ export async function parseWhatsAppMessage(rawText: string) {
   const content = completion.choices?.[0]?.message?.content;
 
   if (!content) {
-    throw new Error("Grok did not return an extraction.");
+    throw new Error("OpenAI did not return an extraction.");
   }
 
   return normalizeWhatsAppExtraction(JSON.parse(content));

@@ -6,7 +6,7 @@ import { ArrowRightLeftIcon, FilterIcon, SearchIcon, SparklesIcon, UserRoundChec
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { assignJob, initialOperationActionState } from "@/src/lib/operations/actions";
+import { assignJob, type OperationActionState } from "@/src/lib/operations/actions";
 
 type Suggestion = { teamId: string; reason: string; score: number };
 type Job = { id: string; customer: string; area: string | null; serviceType: string; status: string; assignedTeam: string | null; suggestions: Suggestion[] };
@@ -31,3 +31,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function FormNotice({ state }: { state: { error?: string; success?: string } }) { return state.error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{state.error}</p> : state.success ? <p role="status" className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{state.success}</p> : null; }
 function Empty({ text }: { text: string }) { return <div className="grid min-h-28 place-items-center rounded-md border border-dashed px-4 text-center text-sm text-muted-foreground"><UserRoundCheckIcon className="mb-2 size-4" />{text}</div>; }
 const controlClass = "w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+const initialOperationActionState: OperationActionState = {};

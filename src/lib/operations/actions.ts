@@ -8,7 +8,6 @@ import { db } from "@/src/lib/db";
 import { assignJobSchema, closeoutJobSchema, createTeamExpenseSchema } from "@/src/lib/operations/schemas";
 
 export type OperationActionState = { error?: string; success?: string };
-export const initialOperationActionState: OperationActionState = {};
 
 export async function assignJob(
   _previousState: OperationActionState,

@@ -3,11 +3,13 @@
 import { useActionState } from "react";
 import { Building2Icon, MapPinnedIcon, PlusIcon, UsersRoundIcon } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { createTeam, initialTeamSetupActionState } from "@/src/lib/team-setup/actions";
+import { createTeam, type TeamSetupActionState } from "@/src/lib/team-setup/actions";
+
+const initialTeamSetupActionState: TeamSetupActionState = {};
+import { canCreateTeam } from "@/src/lib/team-setup/schema";
 
 type Team = {
   id: string;
@@ -21,26 +23,26 @@ export function TeamSetupWorkspace({ teams }: { teams: Team[] }) {
   const [state, formAction, isPending] = useActionState(createTeam, initialTeamSetupActionState);
   const salaryTeams = teams.filter((team) => team.compensationType === "SALARY");
   const commissionTeams = teams.filter((team) => team.compensationType === "COMMISSION");
-  const canAddSalary = salaryTeams.length < 5;
-  const canAddCommission = commissionTeams.length < 1;
+  const canAddSalary = canCreateTeam();
+  const canAddCommission = canCreateTeam();
 
   return (
     <div className="grid gap-6">
       <header className="border-b border-border pb-6">
         <div className="mb-3 flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground"><UsersRoundIcon className="size-5" /></div>
         <h1 className="text-2xl font-semibold">Team setup</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Add the confirmed operating teams and the areas they cover. These records power dispatch suggestions and WhatsApp update ownership.</p>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Review active teams and add more whenever operations expand. These records power dispatch suggestions and WhatsApp update ownership.</p>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2">
-        <TeamGroup title="Salary teams" count={salaryTeams.length} limit={5} teams={salaryTeams} />
-        <TeamGroup title="Commission teams" count={commissionTeams.length} limit={1} teams={commissionTeams} />
+        <TeamGroup title="Salary teams" count={salaryTeams.length} teams={salaryTeams} />
+        <TeamGroup title="Commission teams" count={commissionTeams.length} teams={commissionTeams} />
       </section>
 
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Add active team</CardTitle>
-          <CardDescription>Use the final confirmed business name. Rates and sender details remain configuration records, not UI defaults.</CardDescription>
+          <CardDescription>Data Entry can add salary or commission teams as needed. Use the final confirmed business name; rates and sender details remain configuration records.</CardDescription>
         </CardHeader>
         <CardContent className="pt-5">
           <form action={formAction} className="grid gap-5 md:grid-cols-2">
@@ -55,8 +57,8 @@ export function TeamSetupWorkspace({ teams }: { teams: Team[] }) {
             <div className="grid gap-1.5">
               <label className="text-sm font-medium" htmlFor="compensationType">Compensation</label>
               <select id="compensationType" name="compensationType" className={selectClassName} defaultValue={canAddSalary ? "SALARY" : "COMMISSION"}>
-                <option value="SALARY" disabled={!canAddSalary}>Salary {canAddSalary ? `(${salaryTeams.length}/5)` : "(full)"}</option>
-                <option value="COMMISSION" disabled={!canAddCommission}>Commission {canAddCommission ? `(${commissionTeams.length}/1)` : "(full)"}</option>
+                <option value="SALARY" disabled={!canAddSalary}>Salary</option>
+                <option value="COMMISSION" disabled={!canAddCommission}>Commission</option>
               </select>
             </div>
             <div className="grid gap-1.5">
@@ -73,12 +75,11 @@ export function TeamSetupWorkspace({ teams }: { teams: Team[] }) {
   );
 }
 
-function TeamGroup({ title, count, limit, teams }: { title: string; count: number; limit: number; teams: Team[] }) {
+function TeamGroup({ title, count, teams }: { title: string; count: number; teams: Team[] }) {
   return (
     <Card>
-      <CardHeader className="flex-row items-start justify-between gap-4 space-y-0 border-b">
-        <div><CardTitle className="text-base">{title}</CardTitle><CardDescription className="mt-1">{count} of {limit} active</CardDescription></div>
-        <Badge variant="outline">{count}/{limit}</Badge>
+      <CardHeader className="border-b">
+        <div><CardTitle className="text-base">{title}</CardTitle><CardDescription className="mt-1">{count} active</CardDescription></div>
       </CardHeader>
       <CardContent className="grid gap-3 pt-4">
         {teams.length ? teams.map((team) => <TeamRow key={team.id} team={team} />) : <p className="py-3 text-sm text-muted-foreground">None configured yet.</p>}

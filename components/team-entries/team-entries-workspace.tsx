@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { createTeamEntry, initialActionState, reviewTeamEntry } from "@/src/lib/team-entries/actions";
+import { createTeamEntry, reviewTeamEntry, type TeamEntryActionState } from "@/src/lib/team-entries/actions";
 import { teamEntryTypes } from "@/src/lib/team-entries/schema";
 
 type Team = { id: string; name: string; region: string | null };
@@ -51,6 +51,8 @@ const entryTypeLabels: Record<(typeof teamEntryTypes)[number], string> = {
   NOTE: "Note",
   CORRECTION: "Correction",
 };
+
+const initialActionState: TeamEntryActionState = {};
 
 const reviewStyles = {
   PENDING: "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-950/30 dark:text-amber-300",
@@ -232,4 +234,4 @@ function capitalize(value: string) { return `${value.slice(0, 1)}${value.slice(1
 function formatEntryDate(value: string) { return new Intl.DateTimeFormat("en-MY", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value)); }
 
 const inputClassName = "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
-const selectClassName = inputClassName;
+const selectClassName = `${inputClassName} [color-scheme:light] dark:[color-scheme:dark]`;

@@ -103,7 +103,7 @@ model User {
 
 model Team {
   id                String               @id @default(cuid())
-  name              String
+  name              String               @unique
   region            String?
   compensationType  CompensationType
   active            Boolean              @default(true)
@@ -138,6 +138,7 @@ model TeamMember {
   employeeRecordRows EmployeeRecord[]
 
   @@index([teamId, active])
+  @@unique([teamId, name])
 }
 
 model Partner {
@@ -410,6 +411,7 @@ model PettyCashEntry {
 
 model CommissionRule {
   id               String           @id @default(cuid())
+  seedKey          String?          @unique
   teamId           String?
   compensationType CompensationType
   teamRate         Decimal          @default(0) @db.Decimal(5, 4)

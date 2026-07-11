@@ -22,7 +22,7 @@ export default async function TeamEntriesPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-muted/30 px-4 py-6 text-foreground md:px-8 md:py-10">
+    <main className="min-h-screen px-4 py-6 text-foreground md:px-8 md:py-10">
       <div className="mx-auto grid max-w-7xl gap-6">
         <TeamEntriesWorkspace
           canEdit

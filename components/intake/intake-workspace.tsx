@@ -68,7 +68,7 @@ export function IntakeWorkspace() {
       <Card className="h-fit">
         <CardHeader>
           <CardTitle>Paste WhatsApp message</CardTitle>
-          <CardDescription>Keep the original message intact. Grok extracts booking fields only.</CardDescription>
+          <CardDescription>Keep the original message intact. AI extracts booking fields only.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <Textarea
@@ -87,7 +87,7 @@ export function IntakeWorkspace() {
             </button>
             <Button type="button" onClick={parseMessage} disabled={rawText.trim().length < 20 || isParsing}>
               {isParsing ? <LoaderCircleIcon className="animate-spin" data-icon="inline-start" /> : <SparklesIcon data-icon="inline-start" />}
-              {isParsing ? "Parsing..." : "Parse with Grok"}
+              {isParsing ? "Parsing..." : "Parse booking details"}
             </Button>
           </div>
           {error ? (
@@ -102,7 +102,7 @@ export function IntakeWorkspace() {
       <Card className="min-w-0">
         <CardHeader>
           <CardTitle>Review before booking</CardTitle>
-          <CardDescription>Edit anything Grok could not confidently determine. No price or payment is created here.</CardDescription>
+          <CardDescription>Edit anything the AI could not confidently determine. No price or payment is created here.</CardDescription>
         </CardHeader>
         <CardContent>
           {extraction ? (

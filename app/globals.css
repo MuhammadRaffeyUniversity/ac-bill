@@ -127,4 +127,12 @@ html.dark {
   html {
     @apply font-sans;
   }
+  select,
+  input[type="date"] {
+    color-scheme: light;
+  }
+  html.dark select,
+  html.dark input[type="date"] {
+    color-scheme: dark;
+  }
 }

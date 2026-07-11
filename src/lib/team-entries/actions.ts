@@ -12,10 +12,6 @@ export type TeamEntryActionState = {
   success?: string;
 };
 
-const initialActionState: TeamEntryActionState = {};
-
-export { initialActionState };
-
 export async function createTeamEntry(
   _previousState: TeamEntryActionState,
   formData: FormData,

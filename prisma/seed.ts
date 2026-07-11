@@ -4,6 +4,10 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient, UserRole } from "../src/generated/prisma/client";
 import { env } from "../src/lib/env";
+import {
+  initialCommissionRules,
+  initialTeamRoster,
+} from "../src/lib/team-setup/initial-roster";
 
 config({ path: ".env" });
 config({ path: ".env.local", override: true });
@@ -76,7 +80,47 @@ async function main() {
     );
   }
 
-  console.log("Team seed data awaits confirmed 6 active team names.");
+  for (const teamSeed of initialTeamRoster) {
+    const teamData = {
+      name: teamSeed.name,
+      region: teamSeed.region,
+      serviceAreaTags: [...teamSeed.serviceAreaTags],
+      compensationType: teamSeed.compensationType,
+      active: true,
+      defaultMembers: [...teamSeed.members],
+    };
+    const team = await prisma.team.upsert({
+      where: { name: teamSeed.name },
+      update: teamData,
+      create: teamData,
+    });
+
+    for (const memberName of teamSeed.members) {
+      await prisma.teamMember.upsert({
+        where: { teamId_name: { teamId: team.id, name: memberName } },
+        update: { active: true },
+        create: { name: memberName, teamId: team.id, active: true },
+      });
+    }
+  }
+
+  for (const ruleSeed of initialCommissionRules) {
+    const ruleData = {
+      compensationType: ruleSeed.compensationType,
+      teamRate: ruleSeed.teamRate.toString(),
+      partnerRate: ruleSeed.partnerRate.toString(),
+      companyRate: ruleSeed.companyRate.toString(),
+      effectiveTo: null,
+    };
+
+    await prisma.commissionRule.upsert({
+      where: { seedKey: ruleSeed.seedKey },
+      update: ruleData,
+      create: { ...ruleData, seedKey: ruleSeed.seedKey },
+    });
+  }
+
+  console.log("Seeded the initial team roster and commission rules.");
 }
 
 main()

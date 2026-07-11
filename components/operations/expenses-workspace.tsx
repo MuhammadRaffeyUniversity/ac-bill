@@ -6,7 +6,7 @@ import { ReceiptTextIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createTeamExpense, initialOperationActionState } from "@/src/lib/operations/actions";
+import { createTeamExpense, type OperationActionState } from "@/src/lib/operations/actions";
 
 type Team = { id: string; name: string };
 type Job = { id: string; customer: string; assignedTeamId: string | null };
@@ -19,3 +19,4 @@ export function ExpensesWorkspace({ teams, jobs, expenses, entryDate }: { teams:
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="grid gap-1.5 text-sm"><span className="font-medium">{label}</span>{children}</label>; }
 function Notice({ state }: { state: { error?: string; success?: string } }) { return state.error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{state.error}</p> : state.success ? <p role="status" className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{state.success}</p> : null; }
 const controlClass = "w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+const initialOperationActionState: OperationActionState = {};

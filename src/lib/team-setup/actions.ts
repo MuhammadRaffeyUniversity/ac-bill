@@ -8,13 +8,6 @@ import { createTeamSchema, parseServiceAreaTags } from "@/src/lib/team-setup/sch
 
 export type TeamSetupActionState = { error?: string; success?: string };
 
-export const initialTeamSetupActionState: TeamSetupActionState = {};
-
-const teamLimits = {
-  SALARY: 5,
-  COMMISSION: 1,
-} as const;
-
 export async function createTeam(
   _previousState: TeamSetupActionState,
   formData: FormData,
@@ -33,14 +26,6 @@ export async function createTeam(
   }
 
   const data = result.data;
-  const activeCount = await db.team.count({
-    where: { active: true, compensationType: data.compensationType as CompensationType },
-  });
-  const limit = teamLimits[data.compensationType];
-
-  if (activeCount >= limit) {
-    return { error: `The active ${data.compensationType.toLowerCase()} team limit (${limit}) has already been reached.` };
-  }
 
   await db.team.create({
     data: {

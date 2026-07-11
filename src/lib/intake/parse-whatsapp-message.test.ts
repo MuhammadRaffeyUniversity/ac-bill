@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeWhatsAppExtraction } from "./parse-whatsapp-message";
+import { createOpenAiIntakeRequest, createTimeoutSignal, normalizeWhatsAppExtraction } from "./parse-whatsapp-message";
 
 describe("normalizeWhatsAppExtraction", () => {
   it("normalizes a Malaysian mobile number and preserves missing required fields", () => {
@@ -44,5 +44,33 @@ describe("normalizeWhatsAppExtraction", () => {
     expect(result.missingFields).toEqual(
       expect.arrayContaining(["customerName", "phone", "rawAddress", "unitsCount", "serviceType"]),
     );
+  });
+});
+
+describe("createTimeoutSignal", () => {
+  it("aborts an external parsing request after the configured timeout", async () => {
+    const signal = createTimeoutSignal(1);
+
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    expect(signal.aborted).toBe(true);
+  });
+});
+
+describe("createOpenAiIntakeRequest", () => {
+  it("uses the configured OpenAI model and strict structured output", () => {
+    const request = createOpenAiIntakeRequest({
+      rawText: "Name: Tiruppathi\nService: service",
+      apiKey: "test-key",
+      baseUrl: "https://api.openai.com/v1",
+      model: "gpt-5.6-luna",
+    });
+
+    expect(request.url).toBe("https://api.openai.com/v1/chat/completions");
+    expect(request.init.headers).toMatchObject({ Authorization: "Bearer test-key" });
+    expect(JSON.parse(request.init.body as string)).toMatchObject({
+      model: "gpt-5.6-luna",
+      response_format: { type: "json_schema", json_schema: { strict: true } },
+    });
   });
 });

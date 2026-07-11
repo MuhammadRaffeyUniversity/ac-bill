@@ -28,6 +28,11 @@ describe("auth permissions", () => {
     expect(canAccessSection("PARTNER_VIEWER", "dispatch")).toBe(false);
   });
 
+  test("reserves team setup for Data Entry", () => {
+    expect(canAccessSection("DATA_ENTRY", "teamSetup")).toBe(true);
+    expect(canAccessSection("ADMIN", "teamSetup")).toBe(false);
+  });
+
   test("routes each role to the right starting interface", () => {
     expect(getDefaultRouteForRole("ADMIN")).toBe("/");
     expect(getDefaultRouteForRole("DISPATCHER")).toBe("/dispatch");

@@ -44,6 +44,8 @@ type OperationsShellProps = {
   activePath: string;
   metrics: WorkspaceMetric[];
   rows: WorkspaceRow[];
+  showMetrics?: boolean;
+  showWorkQueue?: boolean;
   children?: React.ReactNode;
 };
 
@@ -65,6 +67,8 @@ export async function OperationsShell({
   activePath,
   metrics,
   rows,
+  showMetrics = true,
+  showWorkQueue = true,
   children,
 }: OperationsShellProps) {
   const session = await auth();
@@ -125,7 +129,7 @@ export async function OperationsShell({
           </header>
 
           <div className="grid gap-4 p-4 md:p-6">
-            <section className="grid gap-3 md:grid-cols-3">
+            {showMetrics ? <section className="grid gap-3 md:grid-cols-3">
               {metrics.map((metric) => (
                 <Card key={metric.label} size="sm">
                   <CardHeader>
@@ -137,11 +141,11 @@ export async function OperationsShell({
                   </CardContent>
                 </Card>
               ))}
-            </section>
+            </section> : null}
 
             {children}
 
-            <Card>
+            {showWorkQueue ? <Card>
               <CardHeader>
                 <CardTitle>Work queue</CardTitle>
                 <CardDescription>Current records visible for this role.</CardDescription>
@@ -190,7 +194,7 @@ export async function OperationsShell({
                   </Table>
                 </div>
               </CardContent>
-            </Card>
+            </Card> : null}
           </div>
         </section>
       </div>

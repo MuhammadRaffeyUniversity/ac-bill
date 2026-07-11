@@ -8,6 +8,7 @@ export type AppSection =
   | "finance"
   | "expenses"
   | "team"
+  | "teamSetup"
   | "teamEntries"
   | "partner";
 
@@ -19,6 +20,7 @@ const sectionRoles = {
   finance: [],
   expenses: ["DATA_ENTRY"],
   team: ["TEAM_LEAD"],
+  teamSetup: ["DATA_ENTRY"],
   teamEntries: ["DATA_ENTRY"],
   partner: ["PARTNER_VIEWER"],
 } satisfies Record<AppSection, UserRole[]>;

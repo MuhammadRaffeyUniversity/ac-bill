@@ -9,6 +9,10 @@ export const createTeamSchema = z.object({
 
 export type CreateTeamInput = z.infer<typeof createTeamSchema>;
 
+export function canCreateTeam() {
+  return true;
+}
+
 export function parseServiceAreaTags(value: string) {
   return [...new Set(value.split(",").map((tag) => tag.trim()).filter(Boolean))].slice(0, 20);
 }

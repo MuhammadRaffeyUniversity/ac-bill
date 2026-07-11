@@ -14,7 +14,7 @@ export default async function IntakePage() {
           <div>
             <div className="mb-3 flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground"><ClipboardPasteIcon className="size-5" /></div>
             <h1 className="text-2xl font-semibold">Create job from WhatsApp</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Extract booking details with Grok, check the result, then save the reviewed job.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Extract booking details with AI, check the result, then save the reviewed job.</p>
           </div>
           <Badge variant="outline">Human review required</Badge>
         </header>

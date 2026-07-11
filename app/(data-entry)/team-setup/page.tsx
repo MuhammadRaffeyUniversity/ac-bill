@@ -1,9 +1,10 @@
 import { TeamSetupWorkspace } from "@/components/team-setup/team-setup-workspace";
 import { requireRole } from "@/src/lib/auth/guards";
+import { getAllowedRolesForSection } from "@/src/lib/auth/permissions";
 import { db } from "@/src/lib/db";
 
 export default async function TeamSetupPage() {
-  await requireRole(["DATA_ENTRY"]);
+  await requireRole(getAllowedRolesForSection("teamSetup"));
 
   const teams = await db.team.findMany({
     orderBy: [{ compensationType: "asc" }, { name: "asc" }],

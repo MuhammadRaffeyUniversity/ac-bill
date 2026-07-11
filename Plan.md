@@ -27,7 +27,7 @@ The workbook currently acts as the company's database and daily report:
 - `Sheet11`: empty.
 - `Sheet12`: sample AI expense categorization table, not part of the core AC workflow.
 
-Current teams observed in the workbook include `Jb 1`, `Jb 2`, `2 Jb`, `Melaka 1`, `Melaka 2`, `Nilai`, `Nilai Team`, and `Ali & Zeeshan`. The business has 6 active teams total: 5 salary teams and 1 commission team. Implementation should seed teams from the final confirmed team list rather than blindly importing every workbook variant.
+Current teams observed in the workbook include `Jb 1`, `Jb 2`, `2 Jb`, `Melaka 1`, `Melaka 2`, `Nilai`, `Nilai Team`, and `Ali & Zeeshan`. These workbook labels include variants and are not the active roster; implementation should seed only confirmed teams rather than blindly importing every variant.
 
 ## Product Scope
 
@@ -53,7 +53,7 @@ Core users:
 - WhatsApp job sender commission defaults to 25% of job sales. This 25% belongs to the sender/outsourcing partner that provides the WhatsApp client, not to Ali personally.
 - Commission teams default to 60% team share, 25% sender share, and 15% company share.
 - Salary teams default to no team revenue commission; company profit is sales minus sender commission and approved team expenses.
-- There are 6 total active teams in the current business setup: 5 salary teams and 1 commission team.
+- The current confirmed roster has four active teams: salary-based `JB Team 1`, `JB Team 2`, and `Melaka Team 1`, plus commission-based `Ali & Zeeshan`. Data Entry can add more teams of either compensation type as operations require.
 - The assigned team must perform the job before final invoicing.
 - A job cannot be marked fully complete until payment collection is recorded as cash, online/account, split payment, unpaid, or cancelled/no-charge.
 - Teams may send job updates and daily entries through WhatsApp instead of logging into the system.
@@ -304,11 +304,11 @@ canCloseJob =
 - Create: `src/lib/env.ts`
 - Create: `src/lib/db.ts`
 
-- [ ] Add dependencies: `prisma`, `@prisma/client`, `zod`, and the selected auth package.
-- [ ] Add scripts: `db:generate`, `db:migrate`, `db:studio`, `typecheck`.
+- [x] Add dependencies: `prisma`, `@prisma/client`, `zod`, and the selected auth package.
+- [x] Add scripts: `db:generate`, `db:migrate`, `db:studio`, `typecheck`.
 - [ ] Create environment validation for Neon database URL and xAI API settings.
-- [ ] Create Prisma client wrapper.
-- [ ] Run `pnpm lint` and `pnpm typecheck`.
+- [x] Create Prisma client wrapper.
+- [x] Run `pnpm lint` and `pnpm typecheck`.
 
 ### Task 2: Database Schema
 
@@ -317,10 +317,10 @@ canCloseJob =
 - Modify: `prisma/schema.prisma`
 - Create: `prisma/seed.ts`
 
-- [ ] Add models listed in the Data Model section.
-- [ ] Add enum types for job status, service type, payment method, compensation type, user role, and invoice status.
-- [ ] Seed the confirmed 6 active teams, default commission rules, and initial admin user.
-- [ ] Mark exactly 5 seeded teams as salary teams and 1 seeded team as commission-based after the final team names are confirmed.
+- [x] Add models listed in the Data Model section.
+- [x] Add enum types for job status, service type, payment method, compensation type, user role, and invoice status.
+- [ ] Seed the four confirmed teams, default commission rules, and initial admin user.
+- [ ] Allow Data Entry to add additional salary or commission teams; the final roster remains open.
 - [ ] Run a migration and verify Prisma Studio opens.
 
 ### Task 3: Calculation Engine
@@ -330,12 +330,12 @@ canCloseJob =
 - Create: `src/lib/finance/calculations.ts`
 - Create: `src/lib/finance/calculations.test.ts`
 
-- [ ] Implement commission-team split.
-- [ ] Implement salary-team company profit.
-- [ ] Implement invoice balance and payment reconciliation.
-- [ ] Implement a closeout guard that requires job performance status and payment status before a job is fully completed.
-- [ ] Add tests using workbook examples: `560 -> 336/140/84` and `510, 115 -> 267.50`.
-- [ ] Run the finance tests before connecting calculations to UI.
+- [x] Implement commission-team split.
+- [x] Implement salary-team company profit.
+- [x] Implement invoice balance and payment reconciliation.
+- [x] Implement a closeout guard that requires job performance status and payment status before a job is fully completed.
+- [x] Add tests using workbook examples: `560 -> 336/140/84` and `510, 115 -> 267.50`.
+- [x] Run the finance tests before connecting calculations to UI.
 
 ### Task 4: WhatsApp Intake Parser
 
@@ -346,11 +346,11 @@ canCloseJob =
 - Create: `app/jobs/intake/page.tsx`
 - Create: `app/api/intake/parse/route.ts`
 
-- [ ] Define the structured output schema with Zod.
-- [ ] Call the LLM with a strict JSON schema.
+- [x] Define the structured output schema with Zod.
+- [x] Call the LLM with a strict JSON schema.
 - [ ] Normalize phone, date/time, service type, and unit count.
-- [ ] Return missing fields and confidence.
-- [ ] Show parsed output in a human-editable review form.
+- [x] Return missing fields and confidence.
+- [x] Show parsed output in a human-editable review form.
 
 ### Task 5: Job and Dispatch Workflow
 
@@ -369,27 +369,27 @@ canCloseJob =
 - [x] Add a job closeout step for performed/not performed, completion notes, and payment status.
 - [x] Add a data-entry screen where operators can enter team-submitted WhatsApp updates for job completion, payments, expenses, and notes.
 - [x] Store raw team WhatsApp update text, submitting team/member, entered-by operator, related job, and review status.
-- [ ] Suggest teams by service area and workload.
+- [x] Suggest teams by service area and workload.
 - [x] Allow manual assignment override.
-- [ ] Add filters by date, team, status, and service type.
+- [x] Add filters by date, team, status, and service type.
 
 ### Task 6: Invoices, Payments, and Feedback
 
 **Files:**
 
 - Create: `app/invoices/[invoiceId]/page.tsx`
-- Create: `app/i/[token]/page.tsx`
-- Create: `app/f/[token]/page.tsx`
+- Create: `app/invoice/[token]/page.tsx`
+- Create: `app/feedback/[token]/page.tsx`
 - Create: `src/lib/invoices/actions.ts`
 - Create: `src/lib/feedback/actions.ts`
 
-- [ ] Generate invoice numbers.
-- [ ] Allow invoice creation only after service/job completion is confirmed, except for admin correction flows.
-- [ ] Add invoice line items from job units and manual charges.
-- [ ] Add cash, online, and split payments.
-- [ ] Build a print-friendly invoice page.
-- [ ] Generate public feedback links.
-- [ ] Save customer rating/comment from public feedback form.
+- [x] Generate invoice numbers.
+- [x] Allow invoice creation only after service/job completion is confirmed, except for admin correction flows.
+- [x] Add invoice line items from job units and manual charges.
+- [x] Add cash, online, and split payments.
+- [x] Build a print-friendly invoice page.
+- [x] Generate public feedback links.
+- [x] Save customer rating/comment from public feedback form.
 
 ### Task 7: Finance and Reports
 
@@ -401,13 +401,13 @@ canCloseJob =
 - Create: `app/finance/petty-cash/page.tsx`
 - Create: `src/lib/reports/daily-report.ts`
 
-- [ ] Recreate the workbook daily dashboard with database-backed values.
+- [x] Recreate the workbook daily dashboard with database-backed values.
 - [ ] Add CEO-only report period controls for daily, weekly, monthly, and yearly views.
 - [ ] Add salary-team and commission-team report views.
 - [ ] Add partner/job sender commission report.
 - [ ] Add employee daily expense, salary plus commission, company commission/share, and daily earnings versus balance received reconciliation.
-- [ ] Add company and personal expense entry forms.
-- [ ] Add petty cash ledger.
+- [x] Add company and personal expense entry forms.
+- [x] Add petty cash ledger.
 - [ ] Verify report totals against a small imported sample from the workbook.
 
 ### Task 8: Excel Migration Helper
@@ -418,10 +418,10 @@ canCloseJob =
 - Create: `scripts/import-ezy-aircond-sample.ts`
 - Create: `docs/workbook-mapping.md`
 
-- [ ] Document how each workbook sheet maps to database tables.
+- [x] Document how each workbook sheet maps to database tables.
 - [ ] Import a limited sample from July 2026 for validation.
-- [ ] Do not import `Sheet12` as operational data.
-- [ ] Flag team-name variants for manual cleanup.
+- [x] Do not import `Sheet12` as operational data.
+- [x] Flag team-name variants for manual cleanup.
 - [ ] Compare dashboard totals after import.
 
 ### Task 9: Authentication and Permissions
@@ -435,8 +435,8 @@ canCloseJob =
 - [ ] Restrict daily, weekly, monthly, and yearly dashboard reports to admin/CEO users only.
 - [ ] Allow dispatchers to create and assign jobs.
 - [x] Allow data-entry operators to enter team-submitted WhatsApp updates for any team without granting CEO-only report access.
-- [ ] Allow team leads to update only their assigned jobs.
-- [ ] Keep invoice and feedback token routes public but read-limited.
+- [x] Allow team leads to update only their assigned jobs.
+- [x] Keep invoice and feedback token routes public but read-limited.
 
 ### Task 10: QA and Release
 
@@ -446,14 +446,14 @@ canCloseJob =
 - Create: `docs/manual-test-checklist.md`
 
 - [ ] Add setup instructions.
-- [ ] Add manual test cases for intake, assignment, completion, payment split, invoice print, feedback, and daily report.
-- [ ] Run `pnpm lint`.
-- [ ] Run `pnpm typecheck`.
+- [x] Add manual test cases for intake, assignment, completion, payment split, invoice print, feedback, and daily report.
+- [x] Run `pnpm lint`.
+- [x] Run `pnpm typecheck`.
 - [ ] Run the app locally and test the main flows in a browser.
 
 ## Open Decisions To Confirm Before Implementation
 
-- Final names of the 6 active teams and their regions/service areas, with 5 salary teams and 1 commission team.
+- Final roster beyond the four confirmed teams, including names, compensation types, and regions/service areas for any future additions.
 - Whether the WhatsApp sender's 25% commission applies before or after discounts.
 - Whether gas charges are job expenses, employee commissions, or pass-through reimbursements.
 - Whether personal expenses should appear on the main profit dashboard or only in a separate owner view.
