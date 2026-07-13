@@ -7,7 +7,7 @@ import { requireRole } from "@/src/lib/auth/guards";
 import { db } from "@/src/lib/db";
 import { assignJobSchema, closeoutJobSchema, createTeamExpenseSchema } from "@/src/lib/operations/schemas";
 
-export type OperationActionState = { error?: string; success?: string; resetKey?: string; invoiceJobId?: string };
+export type OperationActionState = { error?: string; success?: string; resetKey?: string; invoiceJobId?: string; jobId?: string };
 
 export async function assignJob(
   _previousState: OperationActionState,
@@ -35,7 +35,7 @@ export async function assignJob(
   });
   revalidatePath("/dispatch");
   revalidatePath("/jobs");
-  return { success: "Job assigned and recorded in its status history.", resetKey: `${job.id}:${Date.now()}` };
+  return { success: "Job assigned and recorded in its status history.", resetKey: `${job.id}:${Date.now()}`, jobId: job.id };
 }
 
 export async function closeoutJob(
