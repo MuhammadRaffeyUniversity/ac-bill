@@ -170,6 +170,12 @@ Validation rules:
 
 ## Main Screens
 
+### Confirmed Unified Data-Entry Flow
+
+The data-entry interface uses one guided `Job flow` workspace instead of separate Intake, Dispatch, Jobs, Team updates, and Invoices destinations. The operator selects a job from an action queue and completes only its current persisted stage: WhatsApp booking, team assignment, manual team report and closeout, invoice, then customer handoff with PDF and feedback link. Supporting screens such as Expenses and Teams remain separate because they are not stages of a job.
+
+The unified workspace must support the existing light and dark themes through semantic shadcn tokens. On mobile, it becomes a queue-first flow where selecting a job opens the current stage as a full screen rather than compressing desktop columns.
+
 ### Dashboard
 
 - CEO-only access for daily, weekly, monthly, and yearly reports.
@@ -180,7 +186,7 @@ Validation rules:
 - Team cards: active jobs, completed jobs, cash held, amount sent, expenses, net.
 - Alerts: unassigned jobs, unpaid invoices, missing feedback, unapproved expenses.
 
-### Job Intake
+### Job Intake Stage
 
 - Paste WhatsApp message.
 - Run LLM extraction.
@@ -189,13 +195,13 @@ Validation rules:
 - Suggest nearest team using address area/postcode and team service areas.
 - Save job as `BOOKED` or directly assign as `ASSIGNED`.
 
-### Dispatch Board
+### Team Assignment Stage
 
 - Columns by status: booked, assigned, in progress, completed, cancelled/postponed.
 - Filter by date, team, region, service type, payment status.
 - Assignment modal with team availability and service area hints.
 
-### Job Detail
+### Job Flow Detail Workspace
 
 - Customer details, address, raw message, parsed fields.
 - Team assignment and status history.
@@ -220,7 +226,7 @@ Validation rules:
 - Personal expenses.
 - Petty cash ledger.
 
-### Invoice and Feedback
+### Invoice and Feedback Stages
 
 - Internal invoice editor.
 - Invoice creation after a data-entry operator manually confirms service/job completion, amount, and payment details from the team's WhatsApp update.
