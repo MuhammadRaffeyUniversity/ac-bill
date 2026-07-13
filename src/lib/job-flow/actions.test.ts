@@ -9,11 +9,13 @@ describe("job-flow closeout action contract", () => {
     expect(source).toContain("db.$transaction");
     expect(source).toContain("ReviewStatus.APPROVED");
     expect(source).toContain("rawWhatsAppText: data.rawWhatsAppText");
-    expect(source).toContain("statusHistory:");
+    expect(source).toContain("tx.jobStatusHistory.create");
   });
 
   it("guards stale selected jobs before writing", () => {
     expect(source).toContain("expectedUpdatedAt");
+    expect(source).toContain("tx.job.updateMany");
+    expect(source).toContain("updated.count !== 1");
     expect(source).toContain("This job changed since you opened it");
   });
 });

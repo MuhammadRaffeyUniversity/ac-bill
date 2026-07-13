@@ -60,6 +60,8 @@ describe("teamReportCloseoutSchema", () => {
 
   it("requires unpaid and no-charge outcomes to have no payment rows", () => {
     expect(teamReportCloseoutSchema.safeParse({ ...validReport, paymentStatus: "UNPAID", payments: [] }).success).toBe(true);
+    expect(teamReportCloseoutSchema.safeParse({ ...validReport, paymentStatus: "UNPAID", completedAmount: "", payments: [] }).success).toBe(false);
+    expect(teamReportCloseoutSchema.safeParse({ ...validReport, paymentStatus: "UNPAID", completedAmount: 0, payments: [] }).success).toBe(false);
     expect(teamReportCloseoutSchema.safeParse({ ...validReport, paymentStatus: "UNPAID" }).success).toBe(false);
     expect(teamReportCloseoutSchema.safeParse({ ...validReport, paymentStatus: "NO_CHARGE", completedAmount: 0, payments: [] }).success).toBe(true);
     expect(teamReportCloseoutSchema.safeParse({ ...validReport, paymentStatus: "NO_CHARGE", completedAmount: 50, payments: [] }).success).toBe(false);

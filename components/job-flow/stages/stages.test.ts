@@ -11,6 +11,7 @@ describe("job-flow stages", () => {
     expect(report).toContain("Original WhatsApp update");
     expect(report).toContain("No AI");
     expect(report).toContain("Split payment");
+    expect(report).toContain("Reporting team member");
   });
 
   it("keeps customer deliverables together", () => {
@@ -26,5 +27,7 @@ describe("job-flow stages", () => {
     expect(invoice).toContain("Invoice items");
     expect(invoice).toContain("Add line");
     expect(invoice).toContain("items.map");
+    expect(invoice).toContain("Initial payments");
+    expect(invoice).toContain("Add payment");
   });
 });

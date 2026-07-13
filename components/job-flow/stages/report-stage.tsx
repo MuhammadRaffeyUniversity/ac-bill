@@ -14,7 +14,7 @@ const newPayment = (id: string): ReportPayment => ({
   id, method: "CASH", amount: 0, collectedByTeam: true, referenceNumber: "", notes: "",
 });
 
-export function ReportStage({ jobId, updatedAt, cancelled = false }: { jobId: string; updatedAt: string; cancelled?: boolean }) {
+export function ReportStage({ jobId, updatedAt, members, cancelled = false }: { jobId: string; updatedAt: string; members: Array<{ id: string; name: string }>; cancelled?: boolean }) {
   const [state, action, pending] = useActionState(saveTeamReportAndCloseout, {} as JobFlowActionState);
   const [paymentStatus, setPaymentStatus] = useState<ReportPaymentStatus>("PAID");
   const [payments, setPayments] = useState<ReportPayment[]>([newPayment("payment-1")]);
@@ -32,10 +32,10 @@ export function ReportStage({ jobId, updatedAt, cancelled = false }: { jobId: st
     <form action={action} className="mt-5 grid gap-5 lg:grid-cols-2">
       <input type="hidden" name="jobId" value={jobId} />
       <input type="hidden" name="expectedUpdatedAt" value={updatedAt} />
-      <input type="hidden" name="submittedByMemberId" value="" />
       <input type="hidden" name="entryDate" value={new Date().toISOString().slice(0, 10)} />
       <div>
         <label className="grid gap-1.5 text-sm font-medium">Original WhatsApp update<textarea name="rawWhatsAppText" required minLength={10} className="min-h-56 rounded-md border bg-background p-3 font-mono text-sm" /></label>
+        <label className="mt-4 grid gap-1.5 text-sm font-medium">Reporting team member <span className="font-normal text-muted-foreground">(optional)</span><FormSelect name="submittedByMemberId" placeholder="Choose the person who reported"><SelectItem value="">Not specified</SelectItem>{members.map((member) => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}</FormSelect></label>
         <label className="mt-4 grid gap-1.5 text-sm font-medium">Closeout note<textarea name="note" required className="min-h-24 rounded-md border bg-background p-3 text-sm" /></label>
       </div>
       <div className="grid content-start gap-3">

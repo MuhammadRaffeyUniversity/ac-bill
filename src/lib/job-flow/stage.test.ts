@@ -26,5 +26,6 @@ describe("resolveJobFlowStage", () => {
 
   it("keeps cancelled jobs terminal at team report", () => {
     expect(resolveJobFlowStage({ status: "CANCELLED", assignedTeamId: null, performed: false, invoiceId: null })).toBe("TEAM_REPORT");
+    expect(resolveJobFlowStage({ status: "CANCELLED", assignedTeamId: "team_1", performed: false, invoiceId: "invoice_1" })).toBe("TEAM_REPORT");
   });
 });

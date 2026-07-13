@@ -11,8 +11,9 @@ export type JobFlowState = {
 
 export function resolveJobFlowStage(job: JobFlowState | null): JobFlowStage {
   if (!job) return "WHATSAPP";
+  if (job.status === "CANCELLED") return "TEAM_REPORT";
   if (job.invoiceId) return "CUSTOMER_HANDOFF";
   if (job.status === "COMPLETED" && job.performed) return "INVOICE";
-  if (!job.assignedTeamId && job.status !== "CANCELLED") return "ASSIGNMENT";
+  if (!job.assignedTeamId) return "ASSIGNMENT";
   return "TEAM_REPORT";
 }

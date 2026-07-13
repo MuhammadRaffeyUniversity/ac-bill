@@ -2,6 +2,13 @@
 
 Run the checks with a Data Entry account and a CEO account. Do not use production customer data for exploratory tests.
 
+## Unified job-flow verification — 2026-07-13
+
+- [x] Automated: `vitest run` passed 30 files and 91 tests, including stage resolution, queue priority, manual closeout/payment combinations, atomic invoice payments, route compatibility, responsive shell contracts, and deterministic finance examples.
+- [x] Automated: ESLint, TypeScript, and the Next.js production build completed without errors or warnings.
+- [x] Browser: `/signin` loaded from the local app and the theme control switched the root between light and dark modes in both directions.
+- [ ] Browser: the protected `/jobs` intake → assignment → team report → invoice → customer handoff flow still needs an authenticated Data Entry session. No staff credentials were read or placed in this QA record.
+
 ## Data-entry operations
 
 - [ ] Set up the confirmed five salary teams and one commission team, including service areas, before assigning any jobs.

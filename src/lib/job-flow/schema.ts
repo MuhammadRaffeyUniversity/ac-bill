@@ -24,6 +24,10 @@ export const teamReportCloseoutSchema = z.object({
     context.addIssue({ code: "custom", path: ["performed"], message: "Completed work must be confirmed as performed." });
   }
 
+  if (report.status === "COMPLETED" && report.paymentStatus !== "NO_CHARGE" && completedCents <= 0) {
+    context.addIssue({ code: "custom", path: ["completedAmount"], message: "Completed billable work must have a service amount greater than zero." });
+  }
+
   if (report.status === "CANCELLED") {
     if (report.paymentStatus !== "CANCELLED") {
       context.addIssue({ code: "custom", path: ["paymentStatus"], message: "Cancelled jobs must use the cancelled payment outcome." });

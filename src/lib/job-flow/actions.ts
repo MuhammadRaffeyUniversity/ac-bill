@@ -58,9 +58,6 @@ export async function saveTeamReportAndCloseout(
 
   try {
     await db.$transaction(async (tx) => {
-      const current = await tx.job.findUnique({ where: { id: job.id }, select: { status: true, updatedAt: true } });
-      if (!current || current.updatedAt.valueOf() !== job.updatedAt.valueOf()) throw new Error("STALE_JOB");
-
       await tx.teamSubmittedEntry.create({
         data: {
           teamId: job.assignedTeamId!,
@@ -83,8 +80,12 @@ export async function saveTeamReportAndCloseout(
         },
       });
 
-      await tx.job.update({
-        where: { id: job.id },
+      const updated = await tx.job.updateMany({
+        where: {
+          id: job.id,
+          updatedAt: job.updatedAt,
+          status: { notIn: [JobStatus.COMPLETED, JobStatus.CANCELLED] },
+        },
         data: {
           status: data.status as JobStatus,
           paymentStatus: data.paymentStatus as PaymentStatus,
@@ -92,14 +93,17 @@ export async function saveTeamReportAndCloseout(
           performedAt: data.performed === "YES" ? new Date() : null,
           cancellationReason: data.status === "CANCELLED" ? data.note : null,
           remarks: data.note,
-          statusHistory: {
-            create: {
-              previousStatus: current.status,
-              nextStatus: data.status as JobStatus,
-              actorId: session.user.id,
-              note: data.note,
-            },
-          },
+        },
+      });
+      if (updated.count !== 1) throw new Error("STALE_JOB");
+
+      await tx.jobStatusHistory.create({
+        data: {
+          jobId: job.id,
+          previousStatus: job.status,
+          nextStatus: data.status as JobStatus,
+          actorId: session.user.id,
+          note: data.note,
         },
       });
     });

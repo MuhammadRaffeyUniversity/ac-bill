@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
-import { JobStatus, PaymentStatus } from "@/src/generated/prisma/enums";
+import { JobStatus } from "@/src/generated/prisma/enums";
 import { requireRole } from "@/src/lib/auth/guards";
 import { db } from "@/src/lib/db";
-import { assignJobSchema, closeoutJobSchema, createTeamExpenseSchema } from "@/src/lib/operations/schemas";
+import { assignJobSchema, createTeamExpenseSchema } from "@/src/lib/operations/schemas";
 
 export type OperationActionState = { error?: string; success?: string; resetKey?: string; invoiceJobId?: string; jobId?: string };
 
@@ -40,40 +40,12 @@ export async function assignJob(
 
 export async function closeoutJob(
   _previousState: OperationActionState,
-  formData: FormData,
+  _formData: FormData,
 ): Promise<OperationActionState> {
-  const session = await requireRole(["DATA_ENTRY", "DISPATCHER"]);
-  const result = closeoutJobSchema.safeParse({ jobId: formData.get("jobId"), performed: formData.get("performed"), status: formData.get("status"), paymentStatus: formData.get("paymentStatus"), note: formData.get("note") });
-  if (!result.success) return { error: result.error.issues[0]?.message ?? "Check the closeout details." };
-  const data = result.data;
-  if (data.status === "COMPLETED" && data.performed !== "YES") return { error: "A job can only be completed after confirming that the work was performed." };
-  if (data.status === "CANCELLED" && data.paymentStatus !== "CANCELLED") return { error: "Cancelled jobs must use the cancelled payment outcome." };
-
-  const job = await db.job.findUnique({ where: { id: data.jobId }, select: { id: true, status: true } });
-  if (!job) return { error: "This job no longer exists. Refresh the jobs list." };
-
-  await db.job.update({
-    where: { id: job.id },
-    data: {
-      status: data.status as JobStatus,
-      paymentStatus: data.paymentStatus as PaymentStatus,
-      performed: data.performed === "YES",
-      performedAt: data.performed === "YES" ? new Date() : null,
-      cancellationReason: data.status === "CANCELLED" ? data.note : null,
-      remarks: data.note,
-      statusHistory: { create: { previousStatus: job.status, nextStatus: data.status as JobStatus, actorId: session.user.id, note: data.note } },
-    },
-  });
-  revalidatePath("/jobs");
-  revalidatePath("/dispatch");
-  revalidatePath("/team-entries");
-  revalidatePath("/invoices");
-  return {
-    success: data.status === "COMPLETED"
-      ? "Closeout recorded. Next, add the service amount and payment record."
-      : "Closeout and payment outcome recorded.",
-    invoiceJobId: data.status === "COMPLETED" ? job.id : undefined,
-  };
+  void _previousState;
+  void _formData;
+  await requireRole(["DATA_ENTRY", "DISPATCHER"]);
+  return { error: "Use the guided job flow to close this job with its original team report and payment details." };
 }
 
 export async function createTeamExpense(

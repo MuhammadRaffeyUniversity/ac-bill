@@ -16,4 +16,11 @@ describe("job-flow invoice action contract", () => {
     expect(source).toContain("jobId: job.id");
     expect(source).toContain("invoiceId: invoice.id");
   });
+
+  it("requires performed work with an approved manual completion audit", () => {
+    expect(source).toContain("performed: true");
+    expect(source).toContain("TeamEntryType.COMPLETION");
+    expect(source).toContain("ReviewStatus.APPROVED");
+    expect(source).toContain("JOB_NOT_READY");
+  });
 });
