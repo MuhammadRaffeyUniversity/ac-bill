@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleUserRoundIcon, ClipboardListIcon, FileTextIcon, LayoutDashboardIcon, LogOutIcon, ReceiptTextIcon, Settings2Icon, UsersRoundIcon } from "lucide-react";
+import { CircleUserRoundIcon, FileTextIcon, LogOutIcon, ReceiptTextIcon, Settings2Icon } from "lucide-react";
 
 import { signOut } from "@/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -8,11 +8,7 @@ import { requireSession } from "@/src/lib/auth/guards";
 import { hasAnyRole } from "@/src/lib/auth/permissions";
 
 const dataEntryLinks = [
-  { href: "/jobs/intake", label: "Intake", icon: ClipboardListIcon, roles: ["DATA_ENTRY"] as const },
-  { href: "/dispatch", label: "Dispatch", icon: LayoutDashboardIcon, roles: ["DATA_ENTRY", "DISPATCHER"] as const },
-  { href: "/jobs", label: "Jobs", icon: FileTextIcon, roles: ["DATA_ENTRY", "DISPATCHER", "TEAM_LEAD", "VIEWER"] as const },
-  { href: "/team-entries", label: "Team updates", icon: UsersRoundIcon, roles: ["DATA_ENTRY"] as const },
-  { href: "/invoices", label: "Invoices", icon: ReceiptTextIcon, roles: ["DATA_ENTRY", "DISPATCHER"] as const },
+  { href: "/jobs", label: "Job flow", icon: FileTextIcon, roles: ["DATA_ENTRY", "DISPATCHER", "TEAM_LEAD", "VIEWER"] as const },
   { href: "/expenses", label: "Expenses", icon: ReceiptTextIcon, roles: ["DATA_ENTRY"] as const },
   { href: "/team-setup", label: "Teams", icon: Settings2Icon, roles: ["DATA_ENTRY"] as const },
 ] as const;

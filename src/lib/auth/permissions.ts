@@ -27,8 +27,8 @@ const sectionRoles = {
 
 const defaultRoutes = {
   ADMIN: "/",
-  DISPATCHER: "/dispatch",
-  DATA_ENTRY: "/team-entries",
+  DISPATCHER: "/jobs",
+  DATA_ENTRY: "/jobs",
   TEAM_LEAD: "/team",
   PARTNER_VIEWER: "/partner",
   VIEWER: "/jobs",

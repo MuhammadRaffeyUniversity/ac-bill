@@ -112,5 +112,5 @@ export async function saveReviewedIntake(formData: FormData) {
 
   revalidatePath("/jobs");
   revalidatePath("/dispatch");
-  redirect(`/jobs?created=${job.id}`);
+  redirect(`/jobs?job=${encodeURIComponent(job.id)}`);
 }

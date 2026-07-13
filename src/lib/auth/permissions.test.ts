@@ -35,8 +35,8 @@ describe("auth permissions", () => {
 
   test("routes each role to the right starting interface", () => {
     expect(getDefaultRouteForRole("ADMIN")).toBe("/");
-    expect(getDefaultRouteForRole("DISPATCHER")).toBe("/dispatch");
-    expect(getDefaultRouteForRole("DATA_ENTRY")).toBe("/team-entries");
+    expect(getDefaultRouteForRole("DISPATCHER")).toBe("/jobs");
+    expect(getDefaultRouteForRole("DATA_ENTRY")).toBe("/jobs");
     expect(getDefaultRouteForRole("TEAM_LEAD")).toBe("/team");
     expect(getDefaultRouteForRole("PARTNER_VIEWER")).toBe("/partner");
     expect(getDefaultRouteForRole("VIEWER")).toBe("/jobs");
