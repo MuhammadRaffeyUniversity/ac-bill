@@ -12,4 +12,10 @@ describe("intake review theme controls", () => {
     expect(source).not.toContain("bg-amber-50");
     expect(source).not.toContain("text-amber-800");
   });
+
+  test("offers a manual review fallback without discarding the source message", () => {
+    expect(source).toContain("Enter manually");
+    expect(source).toContain("startManualEntry");
+    expect(source).toContain('name="rawText" value={rawText}');
+  });
 });

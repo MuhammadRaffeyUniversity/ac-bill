@@ -1,17 +1,132 @@
-import { JobsWorkspace } from "@/components/operations/jobs-workspace";
+import Link from "next/link";
+
+import { Prisma } from "@/src/generated/prisma/client";
+import { JobStatus } from "@/src/generated/prisma/enums";
+
+import { JobFlowShell } from "@/components/job-flow/job-flow-shell";
+import type { JobFlowQueueRow } from "@/components/job-flow/job-action-queue";
+import { JobStageRail } from "@/components/job-flow/job-stage-rail";
+import { JobSummary } from "@/components/job-flow/job-summary";
+import { AssignStage } from "@/components/job-flow/stages/assign-stage";
+import { HandoffStage } from "@/components/job-flow/stages/handoff-stage";
+import { IntakeStage } from "@/components/job-flow/stages/intake-stage";
+import { InvoiceStage } from "@/components/job-flow/stages/invoice-stage";
+import { ReportStage } from "@/components/job-flow/stages/report-stage";
 import { requireRole } from "@/src/lib/auth/guards";
 import { db } from "@/src/lib/db";
+import { suggestTeamsForDispatch } from "@/src/lib/dispatch/team-suggestion";
+import { compareJobQueueItems, getJobQueueGroup, type JobQueueGroup } from "@/src/lib/job-flow/queue";
+import { resolveJobFlowStage } from "@/src/lib/job-flow/stage";
 
-export default async function JobsPage() {
-  const session = await requireRole(["DISPATCHER", "DATA_ENTRY", "TEAM_LEAD", "VIEWER"]);
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const selectedJobSelect = {
+  id: true, status: true, paymentStatus: true, assignedTeamId: true, performed: true, updatedAt: true, requestedAt: true, serviceType: true, unitsCount: true, rawWhatsAppText: true,
+  customer: { select: { name: true, phone: true } },
+  address: { select: { rawAddress: true, area: true, city: true, state: true, postcode: true } },
+  assignedTeam: { select: { name: true } },
+  sourcePartner: { select: { name: true } },
+  submittedEntries: { where: { entryType: "COMPLETION" as const, reviewStatus: "APPROVED" as const }, orderBy: { createdAt: "desc" as const }, take: 1, select: { parsedFields: true, rawWhatsAppText: true } },
+  feedback: { select: { token: true } },
+  invoice: { select: { id: true, invoiceNumber: true, printableToken: true, total: true, payments: { select: { amount: true } }, items: { select: { description: true, quantity: true, unitPrice: true } } } },
+} satisfies Prisma.JobSelect;
+
+type SelectedJobRecord = Prisma.JobGetPayload<{ select: typeof selectedJobSelect }>;
+
+export default async function JobsPage({ searchParams }: { searchParams: SearchParams }) {
+  const session = await requireRole(["DATA_ENTRY", "DISPATCHER", "TEAM_LEAD", "VIEWER"]);
+  const params = await searchParams;
+  const selectedId = valueOf(params.job);
+  const mode = valueOf(params.mode);
+  const view = valueOf(params.view);
+  const search = valueOf(params.search);
   const teamScope = session.user.role === "TEAM_LEAD" ? session.user.teamId ?? "__unassigned_team__" : undefined;
-  const jobs = await db.job.findMany({
-    where: { assignedTeamId: teamScope },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    select: { id: true, serviceType: true, status: true, paymentStatus: true, customer: { select: { name: true } }, address: { select: { rawAddress: true } }, assignedTeam: { select: { name: true } } },
-  });
-  const isTeamLead = session.user.role === "TEAM_LEAD";
 
-  return <main className="min-h-screen bg-muted/30 px-4 py-6 md:px-8 md:py-10"><div className="mx-auto grid max-w-7xl gap-6"><header><h1 className="text-2xl font-semibold">{isTeamLead ? "My team jobs" : "Jobs"}</h1><p className="mt-1 text-sm text-muted-foreground">{isTeamLead ? "Only jobs assigned to your team are visible here." : "Review live job records and record a complete, auditable closeout."}</p></header><JobsWorkspace canCloseout={["DATA_ENTRY", "DISPATCHER"].includes(session.user.role)} readOnlyMessage={isTeamLead && !session.user.teamId ? "Your account is not assigned to a team yet. Ask an administrator to set your team before using the worklist." : undefined} jobs={jobs.map((job) => ({ id: job.id, customer: job.customer.name, address: job.address.rawAddress, serviceType: job.serviceType, status: job.status, paymentStatus: job.paymentStatus, team: job.assignedTeam?.name ?? null }))} /></div></main>;
+  const [queueJobs, selectedJob, teams] = await Promise.all([
+    db.job.findMany({
+      where: {
+        assignedTeamId: teamScope,
+        ...(search ? { OR: [
+          { id: { contains: search, mode: "insensitive" } },
+          { customer: { name: { contains: search, mode: "insensitive" } } },
+          { customer: { normalizedPhone: { contains: search } } },
+          { address: { rawAddress: { contains: search, mode: "insensitive" } } },
+          { assignedTeam: { name: { contains: search, mode: "insensitive" } } },
+        ] } : {}),
+      },
+      orderBy: { createdAt: "desc" }, take: 100,
+      select: { id: true, status: true, assignedTeamId: true, performed: true, requestedAt: true, createdAt: true, serviceType: true, unitsCount: true, customer: { select: { name: true } }, address: { select: { area: true, city: true } }, assignedTeam: { select: { name: true } }, invoice: { select: { id: true } } },
+    }),
+    selectedId ? db.job.findFirst({ where: { id: selectedId, assignedTeamId: teamScope }, select: selectedJobSelect }) : Promise.resolve(null),
+    db.team.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        region: true,
+        serviceAreaTags: true,
+        _count: {
+          select: {
+            assignedJobs: {
+              where: { status: { in: [JobStatus.BOOKED, JobStatus.ASSIGNED, JobStatus.IN_PROGRESS, JobStatus.POSTPONED] } },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const requestedGroup = groupForView(view);
+  const mappedQueue = queueJobs.map((job) => {
+    const group = getJobQueueGroup({ status: job.status, assignedTeamId: job.assignedTeamId, performed: job.performed, invoiceId: job.invoice?.id ?? null });
+    return { group, requestedAt: job.requestedAt, createdAt: job.createdAt, row: { id: job.id, customer: job.customer.name, jobNumber: `JOB-${job.id.slice(-6).toUpperCase()}`, summary: `${job.unitsCount} unit ${job.serviceType.toLowerCase()}`, location: job.address.area ?? job.address.city ?? "Area pending", team: job.assignedTeam?.name ?? null, group } satisfies JobFlowQueueRow };
+  }).filter((item) => !requestedGroup || requestedGroup === item.group).sort(compareJobQueueItems).map((item) => item.row);
+
+  const showWorkspace = mode === "new" || Boolean(selectedJob);
+  return <JobFlowShell rows={mappedQueue} selectedId={selectedJob?.id} search={search} showWorkspace={showWorkspace}>
+    {mode === "new" && session.user.role === "DATA_ENTRY" ? <IntakeStage /> : selectedJob ? <SelectedJob job={selectedJob} teams={teams} role={session.user.role} /> : <Welcome />}
+  </JobFlowShell>;
 }
+
+function SelectedJob({ job, teams, role }: { job: SelectedJobRecord; teams: Array<{ id: string; name: string; region: string | null; serviceAreaTags: string[]; _count: { assignedJobs: number } }>; role: string }) {
+  const stage = resolveJobFlowStage({ status: job.status, assignedTeamId: job.assignedTeamId, performed: job.performed, invoiceId: job.invoice?.id ?? null });
+  const completion = getCompletion(job.submittedEntries[0]?.parsedFields);
+  const canAct = stage === "ASSIGNMENT"
+    ? role === "DATA_ENTRY" || role === "DISPATCHER"
+    : stage === "TEAM_REPORT"
+      ? role === "DATA_ENTRY"
+      : stage === "INVOICE"
+        ? role === "DATA_ENTRY" || role === "DISPATCHER"
+        : true;
+  return <div className="grid gap-4"><div><p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">JOB-{job.id.slice(-6).toUpperCase()}</p><h1 className="mt-1 text-2xl font-semibold">{job.customer.name}</h1></div><JobStageRail current={stage} /><JobSummary customer={job.customer.name} phone={job.customer.phone} address={job.address.rawAddress} summary={`${job.unitsCount} unit ${job.serviceType.toLowerCase()}`} team={job.assignedTeam?.name ?? null} />{canAct ? renderStage() : <section className="rounded-xl border bg-card p-5 text-sm text-muted-foreground">This role can review the job but cannot change this stage.</section>}</div>;
+
+  function renderStage() {
+    if (stage === "ASSIGNMENT") {
+      const rankedTeams = suggestTeamsForDispatch(
+        teams.map((team) => ({ id: team.id, name: team.name, region: team.region, serviceAreaTags: team.serviceAreaTags, activeJobs: team._count.assignedJobs })),
+        job.address,
+      );
+      const teamsById = new Map(teams.map((team) => [team.id, team]));
+      return <AssignStage jobId={job.id} teams={rankedTeams.map((suggestion) => { const team = teamsById.get(suggestion.teamId)!; return { id: team.id, name: team.name, region: team.region, activeJobs: team._count.assignedJobs, reason: suggestion.reason }; })} />;
+    }
+    if (stage === "TEAM_REPORT") return <ReportStage jobId={job.id} updatedAt={job.updatedAt.toISOString()} cancelled={job.status === "CANCELLED"} />;
+    if (stage === "INVOICE") return <InvoiceStage jobId={job.id} amount={completion.amount} payments={completion.payments} />;
+    if (stage === "CUSTOMER_HANDOFF" && job.invoice && job.feedback) {
+      const paid = job.invoice.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+      return <HandoffStage invoiceNumber={job.invoice.invoiceNumber} total={Number(job.invoice.total)} paid={paid} invoicePath={`/invoice/${job.invoice.printableToken}`} pdfPath={`/api/invoice/${job.invoice.printableToken}/pdf`} feedbackPath={`/feedback/${job.feedback.token}`} />;
+    }
+    return <IntakeStage />;
+  }
+}
+
+function getCompletion(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return { amount: 0, payments: [] };
+  const data = value as { completedAmount?: unknown; payments?: unknown };
+  const payments = Array.isArray(data.payments) ? data.payments.filter((payment): payment is { method: string; amount: number; collectedByTeam: boolean; referenceNumber?: string; notes?: string } => Boolean(payment && typeof payment === "object" && typeof (payment as { amount?: unknown }).amount === "number")) : [];
+  return { amount: typeof data.completedAmount === "number" ? data.completedAmount : 0, payments };
+}
+
+function groupForView(view: string): JobQueueGroup | null { return view === "assignment" ? "ASSIGN_TEAM" : view === "team-report" ? "TEAM_REPORT" : view === "invoice" ? "CREATE_INVOICE" : null; }
+function valueOf(value: string | string[] | undefined) { return typeof value === "string" ? value.trim() : ""; }
+function Welcome() { return <section className="grid min-h-96 place-items-center rounded-xl border border-dashed bg-card p-8 text-center"><div><h1 className="text-2xl font-semibold">Choose the next job</h1><p className="mt-2 text-sm text-muted-foreground">Select a job from the action queue or start with a new WhatsApp booking.</p><Link href="/jobs?mode=new" className="mt-4 inline-flex text-sm font-medium text-primary underline underline-offset-4">New WhatsApp job</Link></div></section>; }

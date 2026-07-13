@@ -52,6 +52,25 @@ export function IntakeWorkspace() {
     }
   }
 
+  function startManualEntry() {
+    setError(null);
+    setExtraction({
+      requestedAt: null,
+      timezone: null,
+      customerName: null,
+      phone: null,
+      rawPhone: null,
+      rawAddress: null,
+      postcode: null,
+      cityOrArea: null,
+      state: null,
+      unitsCount: null,
+      serviceType: null,
+      missingFields: ["customerName", "phone", "rawAddress", "unitsCount", "serviceType"],
+      confidence: null,
+    });
+  }
+
   function updateTextField(field: keyof WhatsAppExtraction, value: string) {
     setExtraction((current) => (current ? { ...current, [field]: value || null } : current));
   }
@@ -70,7 +89,10 @@ export function IntakeWorkspace() {
             placeholder="Paste the complete customer WhatsApp message here..."
             className="min-h-80 resize-y font-mono text-sm leading-6"
           />
-          <div className="flex justify-end">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button type="button" variant="outline" onClick={startManualEntry} disabled={rawText.trim().length < 20 || isParsing}>
+              Enter manually
+            </Button>
             <Button type="button" onClick={parseMessage} disabled={rawText.trim().length < 20 || isParsing}>
               {isParsing ? <LoaderCircleIcon className="animate-spin" data-icon="inline-start" /> : <SparklesIcon data-icon="inline-start" />}
               {isParsing ? "Parsing..." : "Parse booking details"}
