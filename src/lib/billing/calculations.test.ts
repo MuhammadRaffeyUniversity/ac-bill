@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { feedbackSchema } from "./schema";
+import { createInvoiceWithPaymentsSchema, feedbackSchema } from "./schema";
 import { calculateInvoiceTotals, formatInvoiceNumber, getPaymentSummary } from "./calculations";
 
 describe("billing calculations", () => {
@@ -42,5 +42,42 @@ describe("billing calculations", () => {
     const result = feedbackSchema.safeParse({ token: "a".repeat(24), rating: 5, paidAmount: "75", paymentMethod: "CASH" });
 
     expect(result.success).toBe(false);
+  });
+
+  it("accepts initial split payments up to the invoice total", () => {
+    const result = createInvoiceWithPaymentsSchema.safeParse({
+      jobId: "job_1",
+      discount: 0,
+      tax: 0,
+      dueAt: "",
+      items: [{ description: "Service", quantity: 1, unitPrice: 180 }],
+      payments: [
+        { method: "CASH", amount: 100, collectedByTeam: true, referenceNumber: "", notes: "" },
+        { method: "ONLINE", amount: 80, collectedByTeam: false, referenceNumber: "TX-1", notes: "" },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects initial payments above the invoice total", () => {
+    const result = createInvoiceWithPaymentsSchema.safeParse({
+      jobId: "job_1",
+      discount: 0,
+      tax: 0,
+      dueAt: "",
+      items: [{ description: "Service", quantity: 1, unitPrice: 180 }],
+      payments: [{ method: "CASH", amount: 181, collectedByTeam: true, referenceNumber: "", notes: "" }],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("allows unpaid and zero-total invoices without fabricated payments", () => {
+    const unpaid = createInvoiceWithPaymentsSchema.safeParse({ jobId: "job_1", discount: 0, tax: 0, dueAt: "", items: [{ description: "Service", quantity: 1, unitPrice: 180 }], payments: [] });
+    const noCharge = createInvoiceWithPaymentsSchema.safeParse({ jobId: "job_2", discount: 0, tax: 0, dueAt: "", items: [{ description: "No-charge callback", quantity: 1, unitPrice: 0 }], payments: [] });
+
+    expect(unpaid.success).toBe(true);
+    expect(noCharge.success).toBe(true);
   });
 });

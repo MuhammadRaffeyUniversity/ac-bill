@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { calculateInvoiceTotals } from "./calculations";
+
 const amount = z.coerce.number().finite().min(0).max(1_000_000);
 
 export const invoiceItemSchema = z.object({
@@ -27,6 +29,16 @@ export const paymentLineSchema = z.object({
 export const recordPaymentsSchema = z.object({
   invoiceId: z.string().trim().min(1),
   payments: z.array(paymentLineSchema).min(1).max(10),
+});
+
+export const createInvoiceWithPaymentsSchema = createInvoiceSchema.extend({
+  payments: z.array(paymentLineSchema).max(10).default([]),
+}).superRefine((invoice, context) => {
+  const totals = calculateInvoiceTotals(invoice.items, invoice.discount, invoice.tax);
+  const paid = invoice.payments.reduce((sum, payment) => sum + payment.amount, 0);
+  if (paid > totals.total + 0.005) {
+    context.addIssue({ code: "custom", path: ["payments"], message: "Payments cannot exceed the invoice total." });
+  }
 });
 
 export const feedbackSchema = z.object({

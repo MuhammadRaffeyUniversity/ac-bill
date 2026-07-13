@@ -7,11 +7,11 @@ import { InvoiceStatus, JobStatus, PaymentStatus } from "@/src/generated/prisma/
 import { revalidatePath } from "next/cache";
 
 import { calculateInvoiceTotals, formatInvoiceNumber, getPaymentSummary } from "@/src/lib/billing/calculations";
-import { createInvoiceSchema, recordPaymentsSchema } from "@/src/lib/billing/schema";
+import { createInvoiceSchema, createInvoiceWithPaymentsSchema, recordPaymentsSchema } from "@/src/lib/billing/schema";
 import { requireRole } from "@/src/lib/auth/guards";
 import { db } from "@/src/lib/db";
 
-export type BillingActionState = { error?: string; success?: string; invoiceId?: string };
+export type BillingActionState = { error?: string; success?: string; invoiceId?: string; jobId?: string };
 
 const allowedRoles = ["DATA_ENTRY", "DISPATCHER"] as const;
 const invoiceInclude = {
@@ -27,6 +27,19 @@ function parseInvoiceFormData(formData: FormData) {
     tax: formData.get("tax") || 0,
     dueAt: formData.get("dueAt"),
     items,
+  });
+}
+
+function parseInvoiceWithPaymentsFormData(formData: FormData) {
+  const items = JSON.parse(String(formData.get("items") ?? "[]"));
+  const payments = JSON.parse(String(formData.get("payments") ?? "[]"));
+  return createInvoiceWithPaymentsSchema.safeParse({
+    jobId: formData.get("jobId"),
+    discount: formData.get("discount") || 0,
+    tax: formData.get("tax") || 0,
+    dueAt: formData.get("dueAt"),
+    items,
+    payments,
   });
 }
 
@@ -88,6 +101,88 @@ export async function createInvoice(
       });
       revalidatePath("/invoices");
       return { success: `Invoice ${invoice.invoiceNumber} issued.`, invoiceId: invoice.id };
+    } catch (error) {
+      if (error instanceof Error && error.message === "INVOICE_EXISTS") return { error: "This job already has an invoice." };
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002" && attempt < 2) continue;
+      throw error;
+    }
+  }
+  return { error: "Could not allocate an invoice number. Please try again." };
+}
+
+export async function createInvoiceWithPayments(
+  _previousState: BillingActionState,
+  formData: FormData,
+): Promise<BillingActionState> {
+  await requireRole(allowedRoles);
+
+  let parsed: ReturnType<typeof parseInvoiceWithPaymentsFormData>;
+  try {
+    parsed = parseInvoiceWithPaymentsFormData(formData);
+  } catch {
+    return { error: "Invoice or payment rows could not be read. Add them again." };
+  }
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the invoice and payment details." };
+
+  const data = parsed.data;
+  const job = await db.job.findUnique({ where: { id: data.jobId }, select: { id: true, status: true, customerId: true } });
+  if (!job) return { error: "This job no longer exists." };
+  if (job.status !== JobStatus.COMPLETED) return { error: "An invoice can only be created after the job is completed." };
+
+  const totals = calculateInvoiceTotals(data.items, data.discount, data.tax);
+  const paymentSummary = getPaymentSummary(totals.total, data.payments);
+  const invoiceStatus = totals.total > 0 && paymentSummary.isPaid
+    ? InvoiceStatus.PAID
+    : paymentSummary.isPartial
+      ? InvoiceStatus.PARTIALLY_PAID
+      : InvoiceStatus.ISSUED;
+  const paymentStatus = totals.total === 0
+    ? PaymentStatus.NO_CHARGE
+    : paymentSummary.isPaid
+      ? PaymentStatus.PAID
+      : paymentSummary.isPartial
+        ? PaymentStatus.PARTIALLY_PAID
+        : PaymentStatus.UNPAID;
+  const now = new Date();
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const invoice = await db.$transaction(async (tx) => {
+        const existing = await tx.invoice.findUnique({ where: { jobId: data.jobId }, select: { id: true } });
+        if (existing) throw new Error("INVOICE_EXISTS");
+
+        const prefix = formatInvoiceNumber(now, 0).slice(0, -4);
+        const count = await tx.invoice.count({ where: { invoiceNumber: { startsWith: prefix } } });
+        const invoice = await tx.invoice.create({
+          data: {
+            jobId: job.id,
+            invoiceNumber: formatInvoiceNumber(now, count + 1),
+            status: invoiceStatus,
+            subtotal: totals.subtotal,
+            discount: totals.discount,
+            tax: totals.tax,
+            total: totals.total,
+            issuedAt: now,
+            dueAt: data.dueAt ? new Date(data.dueAt) : null,
+            printableToken: randomBytes(24).toString("base64url"),
+            items: { create: data.items.map((item) => ({ ...item, lineTotal: Math.round((item.quantity * item.unitPrice + Number.EPSILON) * 100) / 100 })) },
+            payments: { create: data.payments.map((payment) => ({
+              method: payment.method,
+              amount: payment.amount,
+              collectedByTeam: payment.collectedByTeam,
+              referenceNumber: payment.referenceNumber || null,
+              notes: payment.notes || null,
+            })) },
+          },
+        });
+        await tx.job.update({ where: { id: job.id }, data: { paymentStatus } });
+        await tx.feedback.create({ data: { jobId: job.id, customerId: job.customerId, token: randomBytes(24).toString("base64url") } });
+        return invoice;
+      });
+
+      revalidatePath("/jobs");
+      revalidatePath("/invoices");
+      return { success: `Invoice ${invoice.invoiceNumber} issued.`, invoiceId: invoice.id, jobId: job.id };
     } catch (error) {
       if (error instanceof Error && error.message === "INVOICE_EXISTS") return { error: "This job already has an invoice." };
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002" && attempt < 2) continue;
