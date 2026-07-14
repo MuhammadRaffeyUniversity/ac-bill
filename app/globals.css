@@ -54,6 +54,10 @@
 }
 
 :root {
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 180ms;
+  --motion-duration-slow: 220ms;
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -91,6 +95,78 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+@keyframes motion-fade-lift {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes motion-fade-scale {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@layer utilities {
+  [data-motion="page"] {
+    animation: motion-fade-lift var(--motion-duration-slow) var(--motion-ease-out) both;
+  }
+
+  [data-motion="panel"] {
+    animation: motion-fade-scale var(--motion-duration-base) var(--motion-ease-out) both;
+  }
+
+  [data-motion="item"],
+  [data-motion="list"] > * {
+    animation: motion-fade-lift var(--motion-duration-base) var(--motion-ease-out) both;
+    animation-delay: calc(var(--motion-order, 0) * 32ms);
+  }
+
+  [data-motion="list"] > :nth-child(2) { --motion-order: 1; }
+  [data-motion="list"] > :nth-child(3) { --motion-order: 2; }
+  [data-motion="list"] > :nth-child(4) { --motion-order: 3; }
+  [data-motion="list"] > :nth-child(5) { --motion-order: 4; }
+  [data-motion="list"] > :nth-child(6) { --motion-order: 5; }
+  [data-motion="list"] > :nth-child(7) { --motion-order: 6; }
+  [data-motion="list"] > :nth-child(8) { --motion-order: 7; }
+
+  [data-slot="button"],
+  [data-motion="pressable"] {
+    transition:
+      transform var(--motion-duration-fast) var(--motion-ease-out),
+      background-color var(--motion-duration-fast) ease,
+      border-color var(--motion-duration-fast) ease,
+      color var(--motion-duration-fast) ease,
+      box-shadow var(--motion-duration-fast) ease;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot="button"]:not(:disabled):hover,
+  [data-motion="pressable"]:hover {
+    transform: translateY(-1px);
+  }
+}
+
+[data-slot="button"]:not(:disabled):active,
+[data-motion="pressable"]:active {
+  transform: translateY(0) scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  [data-motion] {
+    transform: none !important;
+  }
 }
 
 html.dark {

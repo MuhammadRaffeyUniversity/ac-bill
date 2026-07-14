@@ -176,6 +176,8 @@ The data-entry interface uses one guided `Job flow` workspace instead of separat
 
 The unified workspace must support the existing light and dark themes through semantic shadcn tokens. On mobile, it becomes a queue-first flow where selecting a job opens the current stage as a full screen rather than compressing desktop columns.
 
+The interface uses a shared subtle operational motion system across sign-in, Data Entry, CEO, supporting staff, and public customer screens. Motion stays between 120–220ms, uses small fade/lift transitions and restrained record staggering, never delays authentication or financial actions, and is disabled when the user prefers reduced motion. Responsive QA covers 320, 360, 768, 1024, and 1440 pixel widths while preserving the mobile queue-first workflow and desktop sidebars.
+
 ### Dashboard
 
 - CEO-only access for daily, weekly, monthly, and yearly reports.

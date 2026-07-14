@@ -26,4 +26,13 @@ describe("guided job desk", () => {
     expect(sources).not.toContain("<select");
     expect(sources).toContain("bg-action-required-muted");
   });
+
+  it("lets selected-job content shrink and wraps mobile toolbar actions", () => {
+    const shell = read("./job-flow-shell.tsx");
+    const page = read("../../app/(data-entry)/jobs/page.tsx");
+
+    expect(shell).toContain("grid-cols-[minmax(0,1fr)] lg:grid-cols-[310px_minmax(0,1fr)]");
+    expect(shell).toContain("mb-4 flex flex-wrap items-center");
+    expect(page).toContain('return <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">');
+  });
 });

@@ -22,31 +22,31 @@ function formatJobTime(job: MonitoringJob) {
 
 export function CeoDashboard({ snapshot }: { snapshot: MonitoringSnapshot }) {
   return (
-    <div className="mx-auto grid max-w-7xl gap-8 px-5 py-7 md:px-8 md:py-9">
-      <nav className="flex flex-wrap items-center gap-2" aria-label="Dashboard period">
+    <div className="mx-auto grid max-w-7xl gap-8 px-4 py-6 sm:px-5 sm:py-7 md:px-8 md:py-9" data-motion="list">
+      <nav className="flex flex-wrap items-center gap-2" aria-label="Dashboard period" data-motion="item">
         <p className="mr-1 text-sm font-medium text-muted-foreground">Period</p>
         {(["today", "7d", "30d"] as const).map((period) => <PeriodLink key={period} period={period} active={snapshot.period} />)}
       </nav>
 
-      <section aria-label="Operational overview" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Operational overview" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-motion="list">
         <Metric icon={ClipboardListIcon} label="Jobs received" value={snapshot.jobs.total.toString()} detail={`${snapshot.jobs.assigned + snapshot.jobs.inProgress} active`} />
         <Metric icon={CircleCheckIcon} label="Jobs completed" value={snapshot.jobs.completed.toString()} detail={`${snapshot.jobs.booked} awaiting assignment`} />
         <Metric icon={WalletCardsIcon} label="Payments received" value={formatMoney(snapshot.finance.received)} detail={`${formatMoney(snapshot.finance.cashCollectedByTeams)} cash collected by teams`} />
         <Metric icon={TrendingUpIcon} label="Company profit recorded" value={formatMoney(snapshot.finance.companyProfit)} detail={`${formatMoney(snapshot.finance.invoiced)} invoiced`} />
       </section>
 
-      <section className="grid gap-3 rounded-lg border border-[#d8e0dc] bg-background p-4 dark:border-border sm:grid-cols-3">
+      <section className="grid gap-3 rounded-lg border border-[#d8e0dc] bg-background p-4 dark:border-border sm:grid-cols-3" data-motion="item">
         <Overview label="Unassigned work" value={snapshot.jobs.unassigned} tone={snapshot.jobs.unassigned > 0 ? "warning" : "neutral"} />
         <Overview label="In progress" value={snapshot.jobs.inProgress} tone="neutral" />
         <Overview label="Cancelled" value={snapshot.jobs.cancelled} tone="neutral" />
       </section>
 
-      <section>
+      <section data-motion="item">
         <SectionHeading title="Needs attention" description="Monitoring flags only. Operational changes belong with the responsible team." />
         {snapshot.attention.length > 0 ? <JobTable jobs={snapshot.attention} /> : <EmptyState icon={CircleCheckIcon} title="No monitoring flags" description={`There are no jobs needing attention in ${snapshot.label.toLowerCase()}.`} />}
       </section>
 
-      <section>
+      <section data-motion="item">
         <SectionHeading title="Recent jobs" description="Latest records across the operation." />
         {snapshot.recent.length > 0 ? <JobTable jobs={snapshot.recent} quiet /> : <EmptyState icon={CalendarDaysIcon} title="No jobs recorded" description={`Jobs created in ${snapshot.label.toLowerCase()} will appear here.`} />}
       </section>

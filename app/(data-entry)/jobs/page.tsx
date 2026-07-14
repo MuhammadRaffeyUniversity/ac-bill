@@ -107,7 +107,7 @@ function SelectedJob({ job, teams, role, handoffTokens }: { job: SelectedJobReco
         : stage === "CUSTOMER_HANDOFF"
           ? Boolean(handoffTokens)
           : true;
-  return <div className="grid gap-4"><div><p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">JOB-{job.id.slice(-6).toUpperCase()}</p><h1 className="mt-1 text-2xl font-semibold">{job.customer.name}</h1></div><JobStageRail current={stage} /><JobSummary customer={job.customer.name} phone={job.customer.phone} address={job.address.rawAddress} summary={`${job.unitsCount} unit ${job.serviceType.toLowerCase()}`} team={job.assignedTeam?.name ?? null} />{canAct ? renderStage() : <section className="rounded-xl border bg-card p-5 text-sm text-muted-foreground">This role can review the job but cannot change this stage.</section>}</div>;
+  return <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4"><div><p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">JOB-{job.id.slice(-6).toUpperCase()}</p><h1 className="mt-1 text-2xl font-semibold">{job.customer.name}</h1></div><JobStageRail current={stage} /><JobSummary customer={job.customer.name} phone={job.customer.phone} address={job.address.rawAddress} summary={`${job.unitsCount} unit ${job.serviceType.toLowerCase()}`} team={job.assignedTeam?.name ?? null} />{canAct ? renderStage() : <section className="rounded-xl border bg-card p-5 text-sm text-muted-foreground">This role can review the job but cannot change this stage.</section>}</div>;
 
   function renderStage() {
     if (stage === "ASSIGNMENT") {

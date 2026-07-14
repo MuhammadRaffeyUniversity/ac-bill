@@ -8,6 +8,7 @@ describe("unified job-flow routes", () => {
   it("shows one core job-flow destination in the data-entry layout", () => {
     const source = read("../../../app/(data-entry)/layout.tsx");
     expect(source).toContain('label: "Job flow"');
+    expect(source).toContain('{ href: "/ledger", label: "Company & CEO"');
     expect(source).not.toContain('label: "Intake"');
     expect(source).not.toContain('label: "Dispatch"');
     expect(source).not.toContain('label: "Team updates"');

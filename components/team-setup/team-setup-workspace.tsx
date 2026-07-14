@@ -29,19 +29,19 @@ export function TeamSetupWorkspace({ teams }: { teams: Team[] }) {
   const canAddCommission = canCreateTeam();
 
   return (
-    <div className="grid gap-6">
-      <header className="border-b border-border pb-6">
+    <div className="grid gap-6" data-motion="list">
+      <header className="border-b border-border pb-6" data-motion="item">
         <div className="mb-3 flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground"><UsersRoundIcon className="size-5" /></div>
         <h1 className="text-2xl font-semibold">Team setup</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Review active teams and add more whenever operations expand. These records power dispatch suggestions and WhatsApp update ownership.</p>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-2" data-motion="item">
         <TeamGroup title="Salary teams" count={salaryTeams.length} teams={salaryTeams} />
         <TeamGroup title="Commission teams" count={commissionTeams.length} teams={commissionTeams} />
       </section>
 
-      <Card>
+      <Card data-motion="item">
         <CardHeader className="border-b">
           <CardTitle>Add active team</CardTitle>
           <CardDescription>Data Entry can add salary or commission teams as needed. Use the final confirmed business name; rates and sender details remain configuration records.</CardDescription>

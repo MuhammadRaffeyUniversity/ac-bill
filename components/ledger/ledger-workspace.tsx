@@ -13,7 +13,7 @@ type Expense = { id: string; date: string; category: string | null; amount: numb
 type CashEntry = { id: string; date: string; cashIn: number; cashOut: number; balanceAfter: number; sourceType: string | null; note: string | null };
 
 export function LedgerWorkspace({ entryDate, companyExpenses, personalExpenses, pettyCashEntries }: { entryDate: string; companyExpenses: Expense[]; personalExpenses: Expense[]; pettyCashEntries: CashEntry[] }) {
-  return <div className="grid gap-6 xl:grid-cols-3">
+  return <div className="grid gap-6 xl:grid-cols-3" data-motion="list">
     <ExpenseCard title="Company expenses" description="Operating costs that may affect company reporting." icon={LandmarkIcon} action={createCompanyExpense} entryDate={entryDate} categoryPlaceholder="Rent, supplies, utilities" categoryRequired entries={companyExpenses} submitLabel="Save company expense" />
     <ExpenseCard title="Personal expenses" description="Owner spending kept outside company profit." icon={BanknoteArrowDownIcon} action={createPersonalExpense} entryDate={entryDate} categoryPlaceholder="Optional category" entries={personalExpenses} submitLabel="Save personal expense" />
     <PettyCashCard entryDate={entryDate} entries={pettyCashEntries} />

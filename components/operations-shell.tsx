@@ -74,7 +74,7 @@ export async function OperationsShell({
   const session = await auth();
   const role = session?.user?.role;
   return (
-    <main className="min-h-screen bg-muted/30 text-foreground">
+    <main className="min-h-screen bg-muted/30 text-foreground" data-motion="page">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
         <aside className="border-b bg-background px-4 py-4 lg:border-r lg:border-b-0">
           <div className="flex items-center gap-2">
