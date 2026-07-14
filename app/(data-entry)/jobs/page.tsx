@@ -45,6 +45,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
 
   const [queueJobs, selectedJob, teams] = await Promise.all([
     db.job.findMany({
+      relationLoadStrategy: "join",
       where: {
         assignedTeamId: teamScope,
         ...(search ? { OR: [
@@ -58,8 +59,8 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
       orderBy: { createdAt: "desc" }, take: 100,
       select: { id: true, status: true, assignedTeamId: true, performed: true, requestedAt: true, createdAt: true, serviceType: true, unitsCount: true, customer: { select: { name: true } }, address: { select: { area: true, city: true } }, assignedTeam: { select: { name: true } }, invoice: { select: { id: true } } },
     }),
-    selectedId ? db.job.findFirst({ where: { id: selectedId, assignedTeamId: teamScope }, select: selectedJobSelect }) : Promise.resolve(null),
-    db.team.findMany({
+    selectedId ? db.job.findFirst({ relationLoadStrategy: "join", where: { id: selectedId, assignedTeamId: teamScope }, select: selectedJobSelect }) : Promise.resolve(null),
+    selectedId ? db.team.findMany({
       where: { active: true },
       orderBy: { name: "asc" },
       select: {
@@ -75,7 +76,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
           },
         },
       },
-    }),
+    }) : Promise.resolve([]),
   ]);
 
   const canAccessCustomerHandoff = session.user.role === "DATA_ENTRY" || session.user.role === "DISPATCHER";
@@ -141,6 +142,7 @@ function Welcome() { return <section className="grid min-h-96 place-items-center
 
 async function loadHandoffTokens(invoiceId: string): Promise<HandoffTokens | null> {
   const invoice = await db.invoice.findUnique({
+    relationLoadStrategy: "join",
     where: { id: invoiceId },
     select: { printableToken: true, job: { select: { feedback: { select: { token: true } } } } },
   });
