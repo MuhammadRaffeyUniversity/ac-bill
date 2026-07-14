@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { SearchIcon } from "lucide-react";
+import { PlusIcon, SearchIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { JobQueueGroup } from "@/src/lib/job-flow/queue";
 import { jobQueueGroupLabels } from "@/src/lib/job-flow/queue";
 
@@ -18,10 +20,11 @@ export type JobFlowQueueRow = {
 const groupOrder: JobQueueGroup[] = ["CREATE_INVOICE", "ASSIGN_TEAM", "TEAM_REPORT", "CUSTOMER_HANDOFF", "CANCELLED"];
 
 export function JobActionQueue({ rows, selectedId, search }: { rows: JobFlowQueueRow[]; selectedId?: string; search: string }) {
-  return <section className="min-h-0 border-r bg-card lg:h-[calc(100vh-105px)] lg:overflow-y-auto" data-motion="panel">
+  return <section className="ops-scrollbar min-h-0 border-r bg-card lg:h-full lg:overflow-y-auto" data-motion="panel">
     <div className="sticky top-0 z-10 border-b bg-card p-4">
       <div className="flex items-center justify-between gap-3"><h2 className="font-semibold">Needs action</h2><Badge variant="secondary">{rows.length}</Badge></div>
       <form action="/jobs" className="relative mt-3"><SearchIcon className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" /><input name="search" defaultValue={search} className="h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Search customer, phone or job" /></form>
+      <Link href="/jobs?mode=new" className={cn(buttonVariants(), "mt-3 h-12 w-full lg:hidden")}><PlusIcon data-icon="inline-start" />New WhatsApp job</Link>
     </div>
     {rows.length ? <div className="p-2">{groupOrder.map((group) => {
       const groupRows = rows.filter((row) => row.group === group);

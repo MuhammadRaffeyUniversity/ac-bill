@@ -30,7 +30,7 @@ export default async function DataEntryLayout({ children }: Readonly<{ children:
   const mobileLinks = visibleLinks.map(({ href, label, mobileIcon: icon }) => ({ href, label, icon }));
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-muted/30 lg:grid-cols-[232px_minmax(0,1fr)]">
+    <div className="grid min-h-screen grid-cols-1 bg-muted/30 lg:h-dvh lg:min-h-0 lg:grid-cols-[232px_minmax(0,1fr)]">
       <aside className="hidden border-b bg-background px-4 py-4 lg:block lg:border-r lg:border-b-0">
         <div><p className="text-sm font-semibold">AC Bill</p><p className="text-xs text-muted-foreground">Operations</p></div>
         <nav className="mt-6 flex gap-1 overflow-x-auto lg:flex-col">
@@ -41,7 +41,7 @@ export default async function DataEntryLayout({ children }: Readonly<{ children:
           ))}
         </nav>
       </aside>
-      <section className="min-w-0" data-motion="page">
+      <section className="min-w-0 lg:grid lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]" data-motion="page">
         <header className="border-b bg-background px-5 py-5 md:px-8">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-start gap-3">
