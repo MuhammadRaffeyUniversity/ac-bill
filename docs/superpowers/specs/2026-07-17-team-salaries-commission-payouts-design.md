@@ -15,11 +15,12 @@ This feature adds auditable obligations and payouts without turning the CEO dash
 - A commission team receives 60% of commissionable invoice sales.
 - The WhatsApp sender receives 25% and the company receives 15%.
 - The commission team share is split equally between its two active members. Each member receives 30% of commissionable invoice sales.
+- If the team share contains an indivisible odd cent, the alphabetically first active member receives the extra RM 0.01. Member obligations must always sum to the full 60% team share.
 - Commissionable invoice sales are the invoice subtotal after discount and before tax.
 - Commission becomes earned and payable when the invoice is issued, not when the job is completed or the customer pays.
 - Salary and commission obligations are settled in full. Partial payout transactions are not allowed.
 - Data Entry records payouts.
-- The CEO sees read-only aggregate payout reporting on the existing dashboard.
+- The CEO sees read-only current-month aggregate payout reporting on the existing dashboard. These payout figures remain monthly even when the operational job-period filter is set to Today, 7 days, or 30 days.
 - Dispatchers, team leads, partner viewers, and customers cannot view or change internal team payout records.
 
 ## Goals
@@ -109,7 +110,8 @@ All calculations use integer cents internally and return two-decimal monetary va
 Pure functions provide:
 
 - Salary allocation: RM 2,000 and two members returns RM 1,000 per member and RM 2,000 total.
-- Commission allocation: commissionable sales and the effective 60%/25%/15% rule returns team, sender, and company shares plus two equal member shares.
+- Commission allocation: commissionable sales and the effective 60%/25%/15% rule returns team, sender, and company shares plus two member shares split as evenly as currency permits.
+- Commission member allocation sorts active members by name and then ID. It divides the team share as evenly as currency permits and assigns an odd-cent remainder to the first member.
 - Commissionable sales: `subtotal - discount`; tax is excluded.
 - Full-payout validation: payout amount must exactly equal the due obligation.
 
@@ -191,7 +193,7 @@ The Teams screen displays the two active members for each team. Existing seeded 
 
 - Data Entry can open the payout workspace, generate monthly salary obligations through page access, and record payouts.
 - CEO/admin remains dashboard-only and read-only.
-- The CEO dashboard adds aggregate salary due/paid and commission due/paid values for its selected reporting period.
+- The CEO dashboard adds aggregate salary due/paid and commission due/paid values for the current Malaysia calendar month, clearly labelled as current-month figures and independent of the operational job-period filter.
 - Dispatcher, team lead, viewer, partner viewer, and public customer routes cannot access payout records.
 - Partner reporting continues to expose only the sender's 25% share and never exposes team salaries or member payout details.
 

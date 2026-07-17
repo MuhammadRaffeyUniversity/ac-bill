@@ -55,8 +55,9 @@ Core users:
 - Salary teams default to no team revenue commission; company profit is sales minus sender commission and approved team expenses.
 - Each salary team has a fixed RM 2,000 monthly salary obligation, split into RM 1,000 for each of its two active members.
 - Commission-team obligations are created when an invoice is issued. The 60% team share is split equally between its two active members, so each member receives 30% of commissionable sales.
+- If the 60% team share contains an indivisible odd cent, the alphabetically first active member receives the extra RM 0.01 so the member obligations still total the full team share.
 - Commissionable sales are the invoice subtotal after discount and before tax.
-- Salary and commission payouts are full-payment only. Data Entry records payouts; the CEO sees read-only aggregate payout reporting on the existing dashboard.
+- Salary and commission payouts are full-payment only. Data Entry records payouts; the CEO sees read-only current-month aggregate payout reporting on the existing dashboard.
 - The current confirmed roster has four active teams: salary-based `JB Team 1`, `JB Team 2`, and `Melaka Team 1`, plus commission-based `Ali & Zeeshan`. Data Entry can add more teams of either compensation type as operations require.
 - The assigned team must perform the job before final invoicing.
 - A job cannot be marked fully complete until payment collection is recorded as cash, online/account, split payment, unpaid, or cancelled/no-charge.
