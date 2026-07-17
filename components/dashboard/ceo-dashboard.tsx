@@ -1,6 +1,7 @@
 import { CalendarDaysIcon, CircleCheckIcon, ClipboardListIcon, HandCoinsIcon, LandmarkIcon, TrendingUpIcon, WalletCardsIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { MonitoringJob, MonitoringPeriod, MonitoringSnapshot } from "@/src/lib/dashboard/monitoring";
 import { cn } from "@/lib/utils";
@@ -23,16 +24,46 @@ function formatJobTime(job: MonitoringJob) {
 export function CeoDashboard({ snapshot }: { snapshot: MonitoringSnapshot }) {
   return (
     <div className="mx-auto grid min-w-0 max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-4 py-6 sm:px-5 sm:py-7 md:px-8 md:py-9" data-motion="list">
-      <nav className="flex flex-wrap items-center gap-2" aria-label="Dashboard period" data-motion="item">
-        <p className="mr-1 text-sm font-medium text-muted-foreground">Period</p>
-        {(["today", "7d", "30d"] as const).map((period) => <PeriodLink key={period} period={period} active={snapshot.period} />)}
-      </nav>
+      <div className="grid gap-3" data-motion="item">
+        <nav className="flex flex-wrap items-center gap-2" aria-label="Dashboard period">
+          <p className="mr-1 text-sm font-medium text-muted-foreground">Period</p>
+          {(["24h", "7d", "30d"] as const).map((period) => <PeriodLink key={period} period={period} active={snapshot.selection.period} />)}
+          <details className="group basis-full sm:basis-auto" open={snapshot.selection.period === "custom"}>
+            <summary className={cn(
+              "w-fit cursor-pointer list-none rounded-md border px-3 py-1.5 text-sm font-medium transition-colors marker:content-none hover:bg-muted",
+              snapshot.selection.period === "custom" ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90" : "border-border bg-background",
+            )}>
+              Custom
+            </summary>
+            <form action="/" method="get" className="mt-3 grid gap-3 rounded-lg border border-[#d8e0dc] bg-background p-3 shadow-sm dark:border-border sm:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_auto] sm:items-end">
+              <input type="hidden" name="period" value="custom" />
+              <label className="grid gap-1.5 text-xs font-medium text-muted-foreground">
+                From
+                <input className="h-9 min-w-0 rounded-md border border-input bg-transparent px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" type="date" name="from" defaultValue={snapshot.selection.from} required />
+              </label>
+              <label className="grid gap-1.5 text-xs font-medium text-muted-foreground">
+                To
+                <input className="h-9 min-w-0 rounded-md border border-input bg-transparent px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" type="date" name="to" defaultValue={snapshot.selection.to} required />
+              </label>
+              <Button type="submit" size="lg">Apply range</Button>
+            </form>
+          </details>
+        </nav>
+      </div>
+
+      <section data-motion="item">
+        <SectionHeading title="Revenue" description={`Billed and collected during ${snapshot.label}.`} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Metric icon={TrendingUpIcon} label="Billed revenue" value={formatMoney(snapshot.finance.billedRevenue)} detail="Non-void invoices issued in this period" />
+          <Metric icon={WalletCardsIcon} label="Payments collected" value={formatMoney(snapshot.finance.paymentsCollected)} detail="Payments received in this period" />
+        </div>
+      </section>
 
       <section aria-label="Operational overview" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-motion="list">
         <Metric icon={ClipboardListIcon} label="Jobs received" value={snapshot.jobs.total.toString()} detail={`${snapshot.jobs.assigned + snapshot.jobs.inProgress} active`} />
         <Metric icon={CircleCheckIcon} label="Jobs completed" value={snapshot.jobs.completed.toString()} detail={`${snapshot.jobs.booked} awaiting assignment`} />
-        <Metric icon={WalletCardsIcon} label="Payments received" value={formatMoney(snapshot.finance.received)} detail={`${formatMoney(snapshot.finance.cashCollectedByTeams)} cash collected by teams`} />
-        <Metric icon={TrendingUpIcon} label="Company profit recorded" value={formatMoney(snapshot.finance.companyProfit)} detail={`${formatMoney(snapshot.finance.invoiced)} invoiced`} />
+        <Metric icon={WalletCardsIcon} label="Cash collected by teams" value={formatMoney(snapshot.finance.cashCollectedByTeams)} detail="Cash payments held or recorded by teams" />
+        <Metric icon={TrendingUpIcon} label="Company profit recorded" value={formatMoney(snapshot.finance.companyProfit)} detail="Calculated commission and salary-team profit" />
       </section>
 
       <section data-motion="item">
@@ -96,8 +127,8 @@ export function CeoDashboard({ snapshot }: { snapshot: MonitoringSnapshot }) {
 }
 
 function PeriodLink({ period, active }: { period: MonitoringPeriod; active: MonitoringPeriod }) {
-  const label = period === "today" ? "Today" : period === "7d" ? "7 days" : "30 days";
-  return <a href={period === "today" ? "/" : `/?period=${period}`} className={cn("rounded-md border px-3 py-1.5 text-sm font-medium transition-colors", period === active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted")}>{label}</a>;
+  const label = period === "24h" ? "24 hr" : period === "7d" ? "7 days" : "30 days";
+  return <a href={`/?period=${period}`} className={cn("rounded-md border px-3 py-1.5 text-sm font-medium transition-colors", period === active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted")}>{label}</a>;
 }
 
 function Metric({ icon: Icon, label, value, detail }: { icon: typeof ClipboardListIcon; label: string; value: string; detail: string }) {

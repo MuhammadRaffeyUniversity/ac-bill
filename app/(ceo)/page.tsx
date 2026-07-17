@@ -6,11 +6,17 @@ import { MobileSidebar } from "@/components/navigation/mobile-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/src/lib/auth/guards";
-import { getMonitoringSnapshot, parseMonitoringPeriod } from "@/src/lib/dashboard/monitoring";
+import { getMonitoringSnapshot } from "@/src/lib/dashboard/monitoring";
+import { resolveRevenueRange } from "@/src/lib/dashboard/revenue-range";
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
+export default async function Home({ searchParams }: { searchParams: Promise<{ period?: string; from?: string; to?: string }> }) {
   const [session, params] = await Promise.all([requireRole(["ADMIN"]), searchParams]);
-  const snapshot = await getMonitoringSnapshot(parseMonitoringPeriod(params.period));
+  const range = resolveRevenueRange({
+    period: params.period,
+    from: params.from,
+    to: params.to,
+  });
+  const snapshot = await getMonitoringSnapshot(range);
 
   return (
     <main className="min-h-screen bg-[#f7f9f8] text-foreground dark:bg-background">
