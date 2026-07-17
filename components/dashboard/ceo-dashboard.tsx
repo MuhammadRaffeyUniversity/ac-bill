@@ -1,4 +1,4 @@
-import { CalendarDaysIcon, CircleCheckIcon, ClipboardListIcon, HandCoinsIcon, TrendingUpIcon, WalletCardsIcon } from "lucide-react";
+import { CalendarDaysIcon, CircleCheckIcon, ClipboardListIcon, HandCoinsIcon, LandmarkIcon, TrendingUpIcon, WalletCardsIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -33,6 +33,39 @@ export function CeoDashboard({ snapshot }: { snapshot: MonitoringSnapshot }) {
         <Metric icon={CircleCheckIcon} label="Jobs completed" value={snapshot.jobs.completed.toString()} detail={`${snapshot.jobs.booked} awaiting assignment`} />
         <Metric icon={WalletCardsIcon} label="Payments received" value={formatMoney(snapshot.finance.received)} detail={`${formatMoney(snapshot.finance.cashCollectedByTeams)} cash collected by teams`} />
         <Metric icon={TrendingUpIcon} label="Company profit recorded" value={formatMoney(snapshot.finance.companyProfit)} detail={`${formatMoney(snapshot.finance.invoiced)} invoiced`} />
+      </section>
+
+      <section data-motion="item">
+        <SectionHeading title="Company expenses" description={`Operating costs recorded in ${snapshot.label.toLowerCase()}.`} />
+        <div className="grid gap-3 xl:grid-cols-[minmax(240px,0.35fr)_minmax(0,1fr)]">
+          <Metric icon={LandmarkIcon} label="Company expense total" value={formatMoney(snapshot.companyExpenses.total)} detail={`${snapshot.companyExpenses.recent.length} recent records shown`} />
+          {snapshot.companyExpenses.recent.length > 0 ? (
+            <div className="overflow-x-auto rounded-lg border border-[#d8e0dc] bg-background dark:border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Date</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Payment method</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {snapshot.companyExpenses.recent.map((expense) => (
+                    <TableRow key={expense.id}>
+                      <TableCell className="font-mono text-xs">{expense.date}</TableCell>
+                      <TableCell className="font-medium">{expense.category}</TableCell>
+                      <TableCell>{expense.paymentMethod ? formatStatus(expense.paymentMethod) : "Not recorded"}</TableCell>
+                      <TableCell className="text-right font-medium">{formatMoney(expense.amount)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <EmptyState icon={LandmarkIcon} title="No company expenses recorded" description={`Company expenses dated within ${snapshot.label.toLowerCase()} will appear here.`} />
+          )}
+        </div>
       </section>
 
       <section data-motion="item">

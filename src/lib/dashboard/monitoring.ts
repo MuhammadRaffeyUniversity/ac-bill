@@ -25,6 +25,10 @@ export type MonitoringSnapshot = {
     cashCollectedByTeams: number;
     companyProfit: number;
   };
+  companyExpenses: {
+    total: number;
+    recent: MonitoringCompanyExpense[];
+  };
   payouts: {
     salaryDue: number;
     salaryPaid: number;
@@ -33,6 +37,14 @@ export type MonitoringSnapshot = {
   };
   attention: MonitoringJob[];
   recent: MonitoringJob[];
+};
+
+export type MonitoringCompanyExpense = {
+  id: string;
+  date: string;
+  category: string;
+  amount: number;
+  paymentMethod: string | null;
 };
 
 export type MonitoringJob = {
@@ -133,6 +145,8 @@ export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<M
     paymentTotals,
     teamCashTotals,
     profitTotals,
+    companyExpenseTotals,
+    recentCompanyExpenses,
     salaryDueTotals,
     salaryPaidTotals,
     commissionDueTotals,
@@ -151,6 +165,22 @@ export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<M
     db.payment.aggregate({ where: { receivedAt: inRange }, _sum: { amount: true } }),
     db.payment.aggregate({ where: { receivedAt: inRange, method: "CASH", collectedByTeam: true }, _sum: { amount: true } }),
     db.commissionEntry.aggregate({ where: { calculatedAt: inRange }, _sum: { netCompanyProfit: true } }),
+    db.companyExpense.aggregate({
+      where: { date: inRange },
+      _sum: { amount: true },
+    }),
+    db.companyExpense.findMany({
+      where: { date: inRange },
+      select: {
+        id: true,
+        date: true,
+        category: true,
+        amount: true,
+        paymentMethod: true,
+      },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      take: 8,
+    }),
     db.payoutObligation.aggregate({
       where: { type: "SALARY", status: "DUE", periodKey: payoutPeriodKey },
       _sum: { amount: true },
@@ -202,6 +232,16 @@ export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<M
       received: numeric(paymentTotals._sum.amount),
       cashCollectedByTeams: numeric(teamCashTotals._sum.amount),
       companyProfit: numeric(profitTotals._sum.netCompanyProfit),
+    },
+    companyExpenses: {
+      total: numeric(companyExpenseTotals._sum.amount),
+      recent: recentCompanyExpenses.map((expense) => ({
+        id: expense.id,
+        date: expense.date.toISOString().slice(0, 10),
+        category: expense.category,
+        amount: numeric(expense.amount),
+        paymentMethod: expense.paymentMethod,
+      })),
     },
     payouts: {
       salaryDue: numeric(salaryDueTotals._sum.amount),
