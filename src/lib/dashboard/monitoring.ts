@@ -1,4 +1,5 @@
 import { db } from "@/src/lib/db";
+import { getPayoutMonthRange, parsePayoutMonth } from "@/src/lib/payouts/month";
 
 export const monitoringPeriods = ["today", "7d", "30d"] as const;
 
@@ -23,6 +24,12 @@ export type MonitoringSnapshot = {
     received: number;
     cashCollectedByTeams: number;
     companyProfit: number;
+  };
+  payouts: {
+    salaryDue: number;
+    salaryPaid: number;
+    commissionDue: number;
+    commissionPaid: number;
   };
   attention: MonitoringJob[];
   recent: MonitoringJob[];
@@ -100,6 +107,8 @@ export function parseMonitoringPeriod(value: string | undefined): MonitoringPeri
 export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<MonitoringSnapshot> {
   const { rangeStart, rangeEnd, label } = getRange(period);
   const inRange = { gte: rangeStart, lte: rangeEnd };
+  const payoutPeriodKey = parsePayoutMonth(undefined);
+  const payoutRange = getPayoutMonthRange(payoutPeriodKey);
   const jobSelect = {
     id: true,
     serviceType: true,
@@ -124,6 +133,10 @@ export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<M
     paymentTotals,
     teamCashTotals,
     profitTotals,
+    salaryDueTotals,
+    salaryPaidTotals,
+    commissionDueTotals,
+    commissionPaidTotals,
     attentionRows,
     recentRows,
   ] = await Promise.all([
@@ -138,6 +151,30 @@ export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<M
     db.payment.aggregate({ where: { receivedAt: inRange }, _sum: { amount: true } }),
     db.payment.aggregate({ where: { receivedAt: inRange, method: "CASH", collectedByTeam: true }, _sum: { amount: true } }),
     db.commissionEntry.aggregate({ where: { calculatedAt: inRange }, _sum: { netCompanyProfit: true } }),
+    db.payoutObligation.aggregate({
+      where: { type: "SALARY", status: "DUE", periodKey: payoutPeriodKey },
+      _sum: { amount: true },
+    }),
+    db.payoutObligation.aggregate({
+      where: { type: "SALARY", status: "PAID", periodKey: payoutPeriodKey },
+      _sum: { amount: true },
+    }),
+    db.payoutObligation.aggregate({
+      where: {
+        type: "COMMISSION",
+        status: "DUE",
+        earnedAt: { gte: payoutRange.rangeStart, lt: payoutRange.rangeEnd },
+      },
+      _sum: { amount: true },
+    }),
+    db.payoutObligation.aggregate({
+      where: {
+        type: "COMMISSION",
+        status: "PAID",
+        earnedAt: { gte: payoutRange.rangeStart, lt: payoutRange.rangeEnd },
+      },
+      _sum: { amount: true },
+    }),
     db.job.findMany({
       where: {
         createdAt: inRange,
@@ -165,6 +202,12 @@ export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<M
       received: numeric(paymentTotals._sum.amount),
       cashCollectedByTeams: numeric(teamCashTotals._sum.amount),
       companyProfit: numeric(profitTotals._sum.netCompanyProfit),
+    },
+    payouts: {
+      salaryDue: numeric(salaryDueTotals._sum.amount),
+      salaryPaid: numeric(salaryPaidTotals._sum.amount),
+      commissionDue: numeric(commissionDueTotals._sum.amount),
+      commissionPaid: numeric(commissionPaidTotals._sum.amount),
     },
     attention: attentionRows.map(mapJob),
     recent: recentRows.map(mapJob),

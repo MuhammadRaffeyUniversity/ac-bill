@@ -1,4 +1,4 @@
-import { CalendarDaysIcon, CircleCheckIcon, ClipboardListIcon, TrendingUpIcon, WalletCardsIcon } from "lucide-react";
+import { CalendarDaysIcon, CircleCheckIcon, ClipboardListIcon, HandCoinsIcon, TrendingUpIcon, WalletCardsIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -33,6 +33,14 @@ export function CeoDashboard({ snapshot }: { snapshot: MonitoringSnapshot }) {
         <Metric icon={CircleCheckIcon} label="Jobs completed" value={snapshot.jobs.completed.toString()} detail={`${snapshot.jobs.booked} awaiting assignment`} />
         <Metric icon={WalletCardsIcon} label="Payments received" value={formatMoney(snapshot.finance.received)} detail={`${formatMoney(snapshot.finance.cashCollectedByTeams)} cash collected by teams`} />
         <Metric icon={TrendingUpIcon} label="Company profit recorded" value={formatMoney(snapshot.finance.companyProfit)} detail={`${formatMoney(snapshot.finance.invoiced)} invoiced`} />
+      </section>
+
+      <section data-motion="item">
+        <SectionHeading title="Team payouts — current month" description="Read-only totals from member salary and commission obligations." />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Metric icon={HandCoinsIcon} label="Salary payouts" value={formatMoney(snapshot.payouts.salaryPaid)} detail={`${formatMoney(snapshot.payouts.salaryDue)} still due`} />
+          <Metric icon={HandCoinsIcon} label="Commission payouts" value={formatMoney(snapshot.payouts.commissionPaid)} detail={`${formatMoney(snapshot.payouts.commissionDue)} still due`} />
+        </div>
       </section>
 
       <section className="grid gap-3 rounded-lg border border-[#d8e0dc] bg-background p-4 dark:border-border sm:grid-cols-3" data-motion="item">
