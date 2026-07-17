@@ -53,6 +53,10 @@ Core users:
 - WhatsApp job sender commission defaults to 25% of job sales. This 25% belongs to the sender/outsourcing partner that provides the WhatsApp client, not to Ali personally.
 - Commission teams default to 60% team share, 25% sender share, and 15% company share.
 - Salary teams default to no team revenue commission; company profit is sales minus sender commission and approved team expenses.
+- Each salary team has a fixed RM 2,000 monthly salary obligation, split into RM 1,000 for each of its two active members.
+- Commission-team obligations are created when an invoice is issued. The 60% team share is split equally between its two active members, so each member receives 30% of commissionable sales.
+- Commissionable sales are the invoice subtotal after discount and before tax.
+- Salary and commission payouts are full-payment only. Data Entry records payouts; the CEO sees read-only aggregate payout reporting on the existing dashboard.
 - The current confirmed roster has four active teams: salary-based `JB Team 1`, `JB Team 2`, and `Melaka Team 1`, plus commission-based `Ali & Zeeshan`. Data Entry can add more teams of either compensation type as operations require.
 - The assigned team must perform the job before final invoicing.
 - A job cannot be marked fully complete until payment collection is recorded as cash, online/account, split payment, unpaid, or cancelled/no-charge.
@@ -98,6 +102,8 @@ Create these tables through Prisma migrations.
 - `CompanyExpense`: date, category, description, amount, payment method, notes.
 - `PersonalExpense`: date, amount, category, description, notes.
 - `PettyCashEntry`: date, cash in, cash out, balance after entry, source type, source id, note.
+- `PayoutObligation`: salary or commission amount owed to one team member, source month or invoice, amount, status, and unique source key.
+- `Payout`: one full settlement of one payout obligation, including payment method, reference, paid date, and recording operator.
 
 ### Profit and Feedback
 
@@ -224,6 +230,7 @@ The interface uses a shared subtle operational motion system across sign-in, Dat
 - Employee daily expense, salary plus commission, company commission/share, and daily earnings versus balance received report.
 - Employee/team member records.
 - Data-entry view for team-submitted WhatsApp daily entries.
+- Data-entry payout workspace for monthly salary obligations and invoice-triggered commission obligations.
 - Company expenses.
 - Personal expenses.
 - Petty cash ledger.
@@ -418,6 +425,9 @@ canCloseJob =
 - [ ] Add salary-team and commission-team report views.
 - [ ] Add partner/job sender commission report.
 - [ ] Add employee daily expense, salary plus commission, company commission/share, and daily earnings versus balance received reconciliation.
+- [ ] Add automatic RM 2,000 monthly salary obligations per salary team, split RM 1,000 per active member.
+- [ ] Add commission-team payout obligations at invoice issuance, split equally between the two active team members.
+- [ ] Add full-payment-only payout recording, audit history, and CEO read-only payout aggregates.
 - [x] Add company and personal expense entry forms.
 - [x] Add petty cash ledger.
 - [ ] Verify report totals against a small imported sample from the workbook.
@@ -482,4 +492,4 @@ Start with a narrow MVP:
 4. Deterministic commission/profit calculations.
 5. Daily dashboard matching the Excel workbook.
 
-This gets the business out of manual sheet entry quickly while leaving advanced maps, automated WhatsApp ingestion, photo uploads, and full payroll for later releases.
+This gets the business out of manual sheet entry quickly while leaving advanced maps, automated WhatsApp ingestion, photo uploads, and payroll beyond the confirmed fixed team salaries and commission payouts for later releases.
