@@ -37,8 +37,26 @@ describe("teamReportCloseoutSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects completed work without an auditable message or performed outcome", () => {
-    expect(teamReportCloseoutSchema.safeParse({ ...validReport, rawWhatsAppText: "Done" }).success).toBe(false);
+  it("accepts a closeout without an optional WhatsApp message or note", () => {
+    const result = teamReportCloseoutSchema.safeParse({
+      ...validReport,
+      rawWhatsAppText: "",
+      note: "",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.rawWhatsAppText).toBe("");
+      expect(result.data.note).toBe("");
+    }
+  });
+
+  it("limits an optional closeout note to 2,000 characters", () => {
+    expect(teamReportCloseoutSchema.safeParse({ ...validReport, note: "x".repeat(2_000) }).success).toBe(true);
+    expect(teamReportCloseoutSchema.safeParse({ ...validReport, note: "x".repeat(2_001) }).success).toBe(false);
+  });
+
+  it("rejects completed work that was not performed", () => {
     expect(teamReportCloseoutSchema.safeParse({ ...validReport, performed: "NO" }).success).toBe(false);
   });
 

@@ -7,7 +7,7 @@ const amountSchema = z.coerce.number().finite().min(0).max(1_000_000);
 export const teamReportCloseoutSchema = z.object({
   jobId: z.string().trim().min(1),
   expectedUpdatedAt: z.string().datetime({ offset: true }),
-  rawWhatsAppText: z.string().trim().min(10, "Paste the complete WhatsApp update so the audit record is useful."),
+  rawWhatsAppText: z.string().trim(),
   submittedByMemberId: z.string().trim().optional().or(z.literal("")),
   entryDate: z.coerce.date(),
   performed: z.enum(["YES", "NO"]),
@@ -15,7 +15,7 @@ export const teamReportCloseoutSchema = z.object({
   paymentStatus: z.enum(["PAID", "PARTIALLY_PAID", "UNPAID", "NO_CHARGE", "CANCELLED"]),
   completedAmount: amountSchema,
   payments: z.array(paymentLineSchema).max(10).default([]),
-  note: z.string().trim().min(1, "Add a closeout note for the audit trail.").max(2_000),
+  note: z.string().trim().max(2_000),
 }).superRefine((report, context) => {
   const paidCents = report.payments.reduce((sum, payment) => sum + toCents(payment.amount), 0);
   const completedCents = toCents(report.completedAmount);

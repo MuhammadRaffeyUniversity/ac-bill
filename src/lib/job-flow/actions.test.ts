@@ -10,6 +10,9 @@ describe("job-flow closeout action contract", () => {
     expect(source).toContain("ReviewStatus.APPROVED");
     expect(source).toContain("rawWhatsAppText: data.rawWhatsAppText");
     expect(source).toContain("tx.jobStatusHistory.create");
+    expect(source).toContain("const note = data.note || undefined");
+    expect(source).toContain("remarks: note ?? null");
+    expect(source).toContain('cancellationReason: data.status === "CANCELLED" ? note ?? null : null');
   });
 
   it("guards stale selected jobs before writing", () => {

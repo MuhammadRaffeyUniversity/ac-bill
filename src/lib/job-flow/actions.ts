@@ -38,6 +38,7 @@ export async function saveTeamReportAndCloseout(
   if (!result.success) return { error: result.error.issues[0]?.message ?? "Check the team report details." };
 
   const data = result.data;
+  const note = data.note || undefined;
   const job = await db.job.findUnique({
     where: { id: data.jobId },
     select: { id: true, assignedTeamId: true, status: true, updatedAt: true },
@@ -76,7 +77,7 @@ export async function saveTeamReportAndCloseout(
           },
           entryDate: data.entryDate,
           reviewStatus: ReviewStatus.APPROVED,
-          notes: data.note,
+          notes: note,
         },
       });
 
@@ -91,8 +92,8 @@ export async function saveTeamReportAndCloseout(
           paymentStatus: data.paymentStatus as PaymentStatus,
           performed: data.performed === "YES",
           performedAt: data.performed === "YES" ? new Date() : null,
-          cancellationReason: data.status === "CANCELLED" ? data.note : null,
-          remarks: data.note,
+          cancellationReason: data.status === "CANCELLED" ? note ?? null : null,
+          remarks: note ?? null,
         },
       });
       if (updated.count !== 1) throw new Error("STALE_JOB");
@@ -103,7 +104,7 @@ export async function saveTeamReportAndCloseout(
           previousStatus: job.status,
           nextStatus: data.status as JobStatus,
           actorId: session.user.id,
-          note: data.note,
+          note,
         },
       });
     });
