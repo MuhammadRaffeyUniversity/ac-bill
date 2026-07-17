@@ -20,11 +20,23 @@ describe("job-flow stages", () => {
     expect(handoff).toContain("Open customer invoice");
     expect(handoff).toContain("Download PDF");
     expect(handoff).toContain("CustomerLinkActions");
+    expect(handoff).toContain("Ready to send");
+    expect(handoff).toContain("Customer documents");
+    expect(handoff).toContain("Total");
+    expect(handoff).toContain("Paid");
+    expect(handoff).toContain("Due");
+    expect(handoff).toContain('aria-label="Step 1"');
     expect(handoff).not.toContain("PrintButton");
     expect(handoff).not.toContain("Print invoice");
     expect(linkActions).not.toContain("Copy review link");
     expect(linkActions).toContain("Open customer review form");
     expect(linkActions).toContain("Copy customer message");
+    expect(linkActions).toContain("Send to customer");
+    expect(linkActions).toContain('aria-label="Step 2"');
+    expect(linkActions).toContain('aria-live="polite"');
+    expect(linkActions).toContain("Could not copy");
+    expect(linkActions).toContain("Includes the invoice and feedback links");
+    expect(linkActions).not.toContain("Copy review");
   });
 
   it("lets the operator review more than one invoice line", () => {
