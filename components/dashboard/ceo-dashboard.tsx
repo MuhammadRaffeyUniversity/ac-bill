@@ -22,7 +22,7 @@ function formatJobTime(job: MonitoringJob) {
 
 export function CeoDashboard({ snapshot }: { snapshot: MonitoringSnapshot }) {
   return (
-    <div className="mx-auto grid max-w-7xl gap-8 px-4 py-6 sm:px-5 sm:py-7 md:px-8 md:py-9" data-motion="list">
+    <div className="mx-auto grid min-w-0 max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-4 py-6 sm:px-5 sm:py-7 md:px-8 md:py-9" data-motion="list">
       <nav className="flex flex-wrap items-center gap-2" aria-label="Dashboard period" data-motion="item">
         <p className="mr-1 text-sm font-medium text-muted-foreground">Period</p>
         {(["today", "7d", "30d"] as const).map((period) => <PeriodLink key={period} period={period} active={snapshot.period} />)}

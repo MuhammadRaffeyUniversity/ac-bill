@@ -20,6 +20,7 @@ describe("CEO company expense visibility", () => {
     expect(dashboard).toContain("Company expense total");
     expect(dashboard).toContain("Payment method");
     expect(dashboard).toContain("No company expenses recorded");
+    expect(dashboard).toContain("grid-cols-[minmax(0,1fr)]");
     expect(dashboard).not.toContain("createCompanyExpense");
   });
 });
