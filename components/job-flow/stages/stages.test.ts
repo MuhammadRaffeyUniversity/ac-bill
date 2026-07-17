@@ -16,10 +16,15 @@ describe("job-flow stages", () => {
 
   it("keeps customer deliverables together", () => {
     const handoff = read("./handoff-stage.tsx");
+    const linkActions = read("../../billing/customer-link-actions.tsx");
     expect(handoff).toContain("Open customer invoice");
     expect(handoff).toContain("Download PDF");
-    expect(handoff).toContain("Print invoice");
     expect(handoff).toContain("CustomerLinkActions");
+    expect(handoff).not.toContain("PrintButton");
+    expect(handoff).not.toContain("Print invoice");
+    expect(linkActions).not.toContain("Copy review link");
+    expect(linkActions).toContain("Open customer review form");
+    expect(linkActions).toContain("Copy customer message");
   });
 
   it("lets the operator review more than one invoice line", () => {

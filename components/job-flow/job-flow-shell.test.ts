@@ -44,6 +44,13 @@ describe("guided job desk", () => {
     expect(queue).toContain("New WhatsApp job");
   });
 
+  it("shows the selected team label instead of its stored database ID", () => {
+    const assignment = read("./stages/assign-stage.tsx");
+
+    expect(assignment).toContain("getDispatchSelectionLabel");
+    expect(assignment).toContain("labelForValue={(value)");
+  });
+
   it("fits desktop panes below the real header and themes their scrollbars", () => {
     const layout = read("../../app/(data-entry)/layout.tsx");
     const shell = read("./job-flow-shell.tsx");
