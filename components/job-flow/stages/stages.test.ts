@@ -12,6 +12,12 @@ describe("job-flow stages", () => {
     expect(report).toContain("No AI");
     expect(report).toContain("Split payment");
     expect(report).toContain("Reporting team member");
+    expect(report).toContain("Closeout note");
+    expect(report).toContain('Original WhatsApp update <span className="font-normal text-muted-foreground">(optional)</span>');
+    expect(report).toContain('Closeout note <span className="font-normal text-muted-foreground">(optional)</span>');
+    expect(report).not.toMatch(/name="rawWhatsAppText" required/);
+    expect(report).not.toMatch(/name="note" required/);
+    expect(report).not.toContain('minLength={10}');
   });
 
   it("keeps customer deliverables together", () => {

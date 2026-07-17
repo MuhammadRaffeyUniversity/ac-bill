@@ -215,10 +215,10 @@ The interface uses a shared subtle operational motion system across sign-in, Dat
 - Customer details, address, raw message, parsed fields.
 - Team assignment and status history.
 - Units and service line items.
-- Job closeout: performed/not performed, completion notes, and required payment status.
+- Job closeout: performed/not performed, optional completion note, and required payment status.
 - Payments: cash, online, split payments.
 - Expenses tied to the job.
-- Manually transcribed team-submitted WhatsApp updates, including raw message text and entered-by audit details; this flow must not call an LLM.
+- Manually transcribed team-submitted WhatsApp updates when available, including raw message text and entered-by audit details; the team completion WhatsApp message is optional and this flow must not call an LLM.
 - Invoice PDF preview/download after manual completion confirmation.
 - Customer review request generator with the supplied payment, technician-rating, and AC-cooling checks.
 
@@ -239,7 +239,7 @@ The interface uses a shared subtle operational motion system across sign-in, Dat
 ### Invoice and Feedback Stages
 
 - Internal invoice editor.
-- Invoice creation after a data-entry operator manually confirms service/job completion, amount, and payment details from the team's WhatsApp update.
+- Invoice creation after a data-entry operator manually confirms service/job completion, amount, and payment details in the team report.
 - Customer-ready invoice PDF using the supplied EZY Aircon invoice layout and warranty terms.
 - Public feedback form using a secure token, with the supplied review verification fields.
 - Feedback results visible inside job detail and dashboard.
@@ -386,9 +386,9 @@ canCloseJob =
 
 - [x] Save reviewed intake as a job.
 - [x] Add status transitions with history.
-- [x] Add a job closeout step for performed/not performed, completion notes, and payment status.
+- [x] Add a job closeout step for performed/not performed, optional completion notes, and payment status.
 - [x] Add a data-entry screen where operators can enter team-submitted WhatsApp updates for job completion, payments, expenses, and notes.
-- [x] Store raw team WhatsApp update text, submitting team/member, entered-by operator, related job, and review status.
+- [x] Store raw team WhatsApp update text when provided, submitting team/member, entered-by operator, related job, and review status.
 - [x] Suggest teams by service area and workload.
 - [x] Allow manual assignment override.
 - [x] Add filters by date, team, status, and service type.

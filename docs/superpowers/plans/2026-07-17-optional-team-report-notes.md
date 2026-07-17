@@ -143,7 +143,8 @@ Extend the first `stages.test.ts` case:
 ```ts
 expect(report).toContain("Original WhatsApp update");
 expect(report).toContain("Closeout note");
-expect(report.match(/\(optional\)/g)).toHaveLength(2);
+expect(report).toContain('Original WhatsApp update <span className="font-normal text-muted-foreground">(optional)</span>');
+expect(report).toContain('Closeout note <span className="font-normal text-muted-foreground">(optional)</span>');
 expect(report).not.toMatch(/name="rawWhatsAppText" required/);
 expect(report).not.toMatch(/name="note" required/);
 expect(report).not.toContain('minLength={10}');
@@ -235,4 +236,3 @@ C:/Users/Raffey/.codex/visualizations/2026/07/17/019f702c-c85f-78e2-bd5b-afb4509
 git add components/job-flow/stages/stages.test.ts components/job-flow/stages/report-stage.tsx Plan.md
 git commit -m "feat: mark team report text optional"
 ```
-

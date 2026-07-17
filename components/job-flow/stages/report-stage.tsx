@@ -28,15 +28,15 @@ export function ReportStage({ jobId, updatedAt, members, cancelled = false }: { 
   return <section className="rounded-xl border bg-card p-5">
     <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Stage 3 of 5</p>
     <h2 className="mt-1 text-xl font-semibold">Record the team report</h2>
-    <p className="mt-1 text-sm text-muted-foreground">Paste the Original WhatsApp update and confirm every value manually. No AI is used for completion.</p>
+    <p className="mt-1 text-sm text-muted-foreground">Paste the original WhatsApp update when available and confirm every value manually. No AI is used for completion.</p>
     <form action={action} className="mt-5 grid gap-5 lg:grid-cols-2">
       <input type="hidden" name="jobId" value={jobId} />
       <input type="hidden" name="expectedUpdatedAt" value={updatedAt} />
       <input type="hidden" name="entryDate" value={new Date().toISOString().slice(0, 10)} />
       <div>
-        <label className="grid gap-1.5 text-sm font-medium">Original WhatsApp update<textarea name="rawWhatsAppText" required minLength={10} className="min-h-56 rounded-md border bg-background p-3 font-mono text-sm" /></label>
+        <label className="grid gap-1.5 text-sm font-medium">Original WhatsApp update <span className="font-normal text-muted-foreground">(optional)</span><textarea name="rawWhatsAppText" className="min-h-56 rounded-md border bg-background p-3 font-mono text-sm" /></label>
         <label className="mt-4 grid gap-1.5 text-sm font-medium">Reporting team member <span className="font-normal text-muted-foreground">(optional)</span><FormSelect name="submittedByMemberId" placeholder="Choose the person who reported"><SelectItem value="">Not specified</SelectItem>{members.map((member) => <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>)}</FormSelect></label>
-        <label className="mt-4 grid gap-1.5 text-sm font-medium">Closeout note<textarea name="note" required className="min-h-24 rounded-md border bg-background p-3 text-sm" /></label>
+        <label className="mt-4 grid gap-1.5 text-sm font-medium">Closeout note <span className="font-normal text-muted-foreground">(optional)</span><textarea name="note" maxLength={2000} className="min-h-24 rounded-md border bg-background p-3 text-sm" /></label>
       </div>
       <div className="grid content-start gap-3">
         <label className="grid gap-1.5 text-sm font-medium">Work outcome<FormSelect name="performed" defaultValue="YES" placeholder="Choose work outcome"><SelectItem value="YES">Yes, performed</SelectItem><SelectItem value="NO">No, not performed</SelectItem></FormSelect></label>
