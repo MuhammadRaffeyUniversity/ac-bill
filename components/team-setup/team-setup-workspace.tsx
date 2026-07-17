@@ -19,6 +19,7 @@ type Team = {
   region: string | null;
   compensationType: "SALARY" | "COMMISSION";
   serviceAreaTags: string[];
+  members: Array<{ id: string; name: string }>;
 };
 
 export function TeamSetupWorkspace({ teams }: { teams: Team[] }) {
@@ -67,6 +68,14 @@ export function TeamSetupWorkspace({ teams }: { teams: Team[] }) {
               <label className="text-sm font-medium" htmlFor="serviceAreaTags">Service areas <span className="font-normal text-muted-foreground">(optional)</span></label>
               <Input id="serviceAreaTags" name="serviceAreaTags" maxLength={500} placeholder="Pasir Gudang, Johor Bahru" />
             </div>
+            <div className="grid gap-1.5">
+              <label className="text-sm font-medium" htmlFor="memberOneName">First member</label>
+              <Input id="memberOneName" name="memberOneName" required maxLength={100} placeholder="First team member" />
+            </div>
+            <div className="grid gap-1.5">
+              <label className="text-sm font-medium" htmlFor="memberTwoName">Second member</label>
+              <Input id="memberTwoName" name="memberTwoName" required maxLength={100} placeholder="Second team member" />
+            </div>
             {state.error ? <p role="alert" className="md:col-span-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{state.error}</p> : null}
             {state.success ? <p role="status" className="md:col-span-2 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-950/30 dark:text-emerald-300">{state.success}</p> : null}
             <div className="md:col-span-2 flex justify-end"><Button type="submit" disabled={isPending || (!canAddSalary && !canAddCommission)}><PlusIcon />{isPending ? "Adding team..." : "Add team"}</Button></div>
@@ -91,5 +100,5 @@ function TeamGroup({ title, count, teams }: { title: string; count: number; team
 }
 
 function TeamRow({ team }: { team: Team }) {
-  return <div className="grid gap-1 border-b border-border pb-3 last:border-0 last:pb-0"><p className="font-medium">{team.name}</p>{team.region ? <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPinnedIcon className="size-3.5" />{team.region}</p> : null}{team.serviceAreaTags.length ? <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Building2Icon className="size-3.5" />{team.serviceAreaTags.join(", ")}</p> : null}</div>;
+  return <div className="grid gap-1 border-b border-border pb-3 last:border-0 last:pb-0"><p className="font-medium">{team.name}</p><p className="text-xs text-muted-foreground">{team.members.length ? team.members.map(({ name }) => name).join(" & ") : "Member setup required"}</p>{team.region ? <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPinnedIcon className="size-3.5" />{team.region}</p> : null}{team.serviceAreaTags.length ? <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Building2Icon className="size-3.5" />{team.serviceAreaTags.join(", ")}</p> : null}</div>;
 }

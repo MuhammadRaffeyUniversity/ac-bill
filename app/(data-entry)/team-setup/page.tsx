@@ -8,7 +8,18 @@ export default async function TeamSetupPage() {
 
   const teams = await db.team.findMany({
     orderBy: [{ compensationType: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, region: true, compensationType: true, serviceAreaTags: true },
+    select: {
+      id: true,
+      name: true,
+      region: true,
+      compensationType: true,
+      serviceAreaTags: true,
+      members: {
+        where: { active: true },
+        orderBy: [{ name: "asc" }, { id: "asc" }],
+        select: { id: true, name: true },
+      },
+    },
   });
 
   return (

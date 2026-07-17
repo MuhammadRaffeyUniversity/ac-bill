@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { CompensationType } from "@/src/generated/prisma/enums";
 import { requireRole } from "@/src/lib/auth/guards";
+import { businessSetup } from "@/src/lib/config/business";
 import { db } from "@/src/lib/db";
 import { createTeamSchema, parseServiceAreaTags } from "@/src/lib/team-setup/schema";
 
@@ -19,6 +20,8 @@ export async function createTeam(
     region: formData.get("region"),
     compensationType: formData.get("compensationType"),
     serviceAreaTags: formData.get("serviceAreaTags"),
+    memberOneName: formData.get("memberOneName"),
+    memberTwoName: formData.get("memberTwoName"),
   });
 
   if (!result.success) {
@@ -27,13 +30,25 @@ export async function createTeam(
 
   const data = result.data;
 
-  await db.team.create({
-    data: {
-      name: data.name,
-      region: data.region || undefined,
-      compensationType: data.compensationType as CompensationType,
-      serviceAreaTags: parseServiceAreaTags(data.serviceAreaTags || ""),
-    },
+  await db.$transaction(async (tx) => {
+    await tx.team.create({
+      data: {
+        name: data.name,
+        region: data.region || undefined,
+        compensationType: data.compensationType as CompensationType,
+        monthlySalaryAmount: data.compensationType === CompensationType.SALARY
+          ? businessSetup.salaryTeamMonthlyAmount
+          : null,
+        defaultMembers: [data.memberOneName, data.memberTwoName],
+        serviceAreaTags: parseServiceAreaTags(data.serviceAreaTags || ""),
+        members: {
+          create: [
+            { name: data.memberOneName, active: true },
+            { name: data.memberTwoName, active: true },
+          ],
+        },
+      },
+    });
   });
 
   revalidatePath("/team-setup");
