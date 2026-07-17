@@ -10,6 +10,7 @@ export type AppSection =
   | "team"
   | "teamSetup"
   | "teamEntries"
+  | "payouts"
   | "partner";
 
 const sectionRoles = {
@@ -22,6 +23,7 @@ const sectionRoles = {
   team: ["TEAM_LEAD"],
   teamSetup: ["DATA_ENTRY"],
   teamEntries: ["DATA_ENTRY"],
+  payouts: ["DATA_ENTRY"],
   partner: ["PARTNER_VIEWER"],
 } satisfies Record<AppSection, UserRole[]>;
 

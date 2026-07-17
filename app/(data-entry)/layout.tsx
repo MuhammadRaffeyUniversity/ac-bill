@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleUserRoundIcon, FileTextIcon, LandmarkIcon, LogOutIcon, ReceiptTextIcon, Settings2Icon } from "lucide-react";
+import { CircleUserRoundIcon, FileTextIcon, HandCoinsIcon, LandmarkIcon, LogOutIcon, ReceiptTextIcon, Settings2Icon } from "lucide-react";
 
 import { signOut } from "@/auth";
 import { MobileSidebar } from "@/components/navigation/mobile-sidebar";
@@ -12,6 +12,7 @@ const dataEntryLinks = [
   { href: "/jobs", label: "Job flow", icon: FileTextIcon, mobileIcon: "jobs", roles: ["DATA_ENTRY", "DISPATCHER", "TEAM_LEAD", "VIEWER"] as const },
   { href: "/expenses", label: "Expenses", icon: ReceiptTextIcon, mobileIcon: "expenses", roles: ["DATA_ENTRY"] as const },
   { href: "/ledger", label: "Company & CEO", icon: LandmarkIcon, mobileIcon: "ledger", roles: ["DATA_ENTRY"] as const },
+  { href: "/payouts", label: "Payouts", icon: HandCoinsIcon, mobileIcon: "payouts", roles: ["DATA_ENTRY"] as const },
   { href: "/team-setup", label: "Teams", icon: Settings2Icon, mobileIcon: "teams", roles: ["DATA_ENTRY"] as const },
 ] as const;
 

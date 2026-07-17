@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   FileTextIcon,
   GaugeIcon,
+  HandCoinsIcon,
   LandmarkIcon,
   MenuIcon,
   ReceiptTextIcon,
@@ -27,7 +28,7 @@ import { cn } from "@/lib/utils";
 export type MobileSidebarLink = {
   href: string;
   label: string;
-  icon: "jobs" | "expenses" | "ledger" | "teams" | "monitor";
+  icon: "jobs" | "expenses" | "ledger" | "teams" | "monitor" | "payouts";
 };
 
 const icons: Record<MobileSidebarLink["icon"], LucideIcon> = {
@@ -36,6 +37,7 @@ const icons: Record<MobileSidebarLink["icon"], LucideIcon> = {
   ledger: LandmarkIcon,
   teams: Settings2Icon,
   monitor: GaugeIcon,
+  payouts: HandCoinsIcon,
 };
 
 export function MobileSidebar({
