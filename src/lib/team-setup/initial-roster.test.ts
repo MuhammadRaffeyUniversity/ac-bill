@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import { businessSetup } from "../config/business";
 import { initialCommissionRules, initialTeamRoster } from "./initial-roster";
 
 describe("initial team roster", () => {
+  it("stores the confirmed salary amount and two-member team size in server configuration", () => {
+    expect(businessSetup.salaryTeamMonthlyAmount).toBe(2000);
+    expect(businessSetup.membersPerTeam).toBe(2);
+  });
+
   it("contains the four confirmed teams with a three-to-one compensation split", () => {
     expect(initialTeamRoster.map((team) => team.name)).toEqual([
       "JB Team 1",

@@ -83,6 +83,17 @@ enum ReviewStatus {
   REJECTED
 }
 
+enum PayoutObligationType {
+  SALARY
+  COMMISSION
+}
+
+enum PayoutObligationStatus {
+  DUE
+  PAID
+  VOID
+}
+
 model User {
   id                 String               @id @default(cuid())
   name               String
@@ -95,6 +106,7 @@ model User {
   updatedAt          DateTime             @updatedAt
   auditLogs          AuditLog[]
   enteredTeamEntries TeamSubmittedEntry[] @relation("EnteredByOperator")
+  recordedPayouts    Payout[]
   statusChanges      JobStatusHistory[]
   team               Team?                @relation(fields: [teamId], references: [id])
 
@@ -109,6 +121,7 @@ model Team {
   compensationType  CompensationType
   active            Boolean              @default(true)
   defaultMembers    String[]             @default([])
+  monthlySalaryAmount Decimal?           @db.Decimal(12, 2)
   latitude          Decimal?             @db.Decimal(10, 7)
   longitude         Decimal?             @db.Decimal(10, 7)
   serviceAreaTags   String[]             @default([])
@@ -119,6 +132,7 @@ model Team {
   commissionRules   CommissionRule[]
   expenses          TeamExpense[]
   members           TeamMember[]
+  payoutObligations PayoutObligation[]
   submittedEntries  TeamSubmittedEntry[]
   users             User[]
 
@@ -137,6 +151,7 @@ model TeamMember {
   team               Team                 @relation(fields: [teamId], references: [id])
   submittedEntries   TeamSubmittedEntry[] @relation("SubmittedByMember")
   employeeRecordRows EmployeeRecord[]
+  payoutObligations  PayoutObligation[]
 
   @@index([teamId, active])
   @@unique([teamId, name])
@@ -308,6 +323,7 @@ model Invoice {
   items          InvoiceItem[]
   job            Job              @relation(fields: [jobId], references: [id])
   payments       Payment[]
+  payoutObligations PayoutObligation[]
 
   @@index([status, issuedAt])
 }
@@ -342,6 +358,50 @@ model Payment {
 
   @@index([invoiceId])
   @@index([method, receivedAt])
+}
+
+model PayoutObligation {
+  id           String                   @id @default(cuid())
+  type         PayoutObligationType
+  status       PayoutObligationStatus   @default(DUE)
+  teamId       String
+  teamMemberId String
+  invoiceId    String?
+  periodKey    String?
+  sourceKey    String                   @unique
+  amount       Decimal                  @db.Decimal(12, 2)
+  earnedAt     DateTime
+  voidedAt     DateTime?
+  voidReason   String?
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  team         Team                     @relation(fields: [teamId], references: [id])
+  teamMember   TeamMember               @relation(fields: [teamMemberId], references: [id])
+  invoice      Invoice?                 @relation(fields: [invoiceId], references: [id])
+  payout       Payout?
+
+  @@index([type, status, earnedAt])
+  @@index([teamId, periodKey])
+  @@index([teamMemberId, earnedAt])
+  @@index([invoiceId])
+}
+
+model Payout {
+  id              String           @id @default(cuid())
+  obligationId    String           @unique
+  amount          Decimal          @db.Decimal(12, 2)
+  method          PaymentMethod
+  referenceNumber String?
+  note            String?
+  paidAt          DateTime
+  recordedById    String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  obligation      PayoutObligation @relation(fields: [obligationId], references: [id])
+  recordedBy      User             @relation(fields: [recordedById], references: [id])
+
+  @@index([recordedById, paidAt])
+  @@index([paidAt])
 }
 
 model TeamExpense {

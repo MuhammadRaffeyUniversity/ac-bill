@@ -88,6 +88,7 @@ async function main() {
       compensationType: teamSeed.compensationType,
       active: true,
       defaultMembers: [...teamSeed.members],
+      monthlySalaryAmount: teamSeed.compensationType === "SALARY" ? "2000.00" : null,
     };
     const team = await prisma.team.upsert({
       where: { name: teamSeed.name },

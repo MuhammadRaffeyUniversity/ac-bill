@@ -2,6 +2,8 @@ export const businessSetup = {
   activeTeams: 6,
   salaryTeams: 5,
   commissionTeams: 1,
+  salaryTeamMonthlyAmount: 2000,
+  membersPerTeam: 2,
   senderCommissionRate: 0.25,
   commissionTeamRates: {
     teamRate: 0.6,
