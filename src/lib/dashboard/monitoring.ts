@@ -1,12 +1,11 @@
 import { db } from "@/src/lib/db";
+import type { RevenuePeriod, RevenueRange } from "@/src/lib/dashboard/revenue-range";
 import { getPayoutMonthRange, parsePayoutMonth } from "@/src/lib/payouts/month";
 
-export const monitoringPeriods = ["today", "7d", "30d"] as const;
-
-export type MonitoringPeriod = (typeof monitoringPeriods)[number];
+export type MonitoringPeriod = RevenuePeriod;
 
 export type MonitoringSnapshot = {
-  period: MonitoringPeriod;
+  selection: Pick<RevenueRange, "period" | "from" | "to">;
   label: string;
   rangeStart: Date;
   rangeEnd: Date;
@@ -20,6 +19,8 @@ export type MonitoringSnapshot = {
     unassigned: number;
   };
   finance: {
+    billedRevenue: number;
+    paymentsCollected: number;
     invoiced: number;
     received: number;
     cashCollectedByTeams: number;
@@ -61,24 +62,6 @@ export type MonitoringJob = {
   tone: "danger" | "warning" | "success";
 };
 
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function getRange(period: MonitoringPeriod, now = new Date()) {
-  const rangeEnd = new Date(now);
-  const rangeStart = startOfDay(now);
-
-  if (period === "7d") rangeStart.setDate(rangeStart.getDate() - 6);
-  if (period === "30d") rangeStart.setDate(rangeStart.getDate() - 29);
-
-  return {
-    rangeStart,
-    rangeEnd,
-    label: period === "today" ? "Today" : period === "7d" ? "Last 7 days" : "Last 30 days",
-  };
-}
-
 function numeric(value: { toString(): string } | null | undefined) {
   return value ? Number(value.toString()) : 0;
 }
@@ -112,13 +95,8 @@ function mapJob(job: {
   return { ...job, customer: job.customer.name, area: job.address.area ?? job.address.city, assignedTeam, scheduledAt: job.scheduledWindowStart, issue: "On track", tone: "success" };
 }
 
-export function parseMonitoringPeriod(value: string | undefined): MonitoringPeriod {
-  return monitoringPeriods.includes(value as MonitoringPeriod) ? (value as MonitoringPeriod) : "today";
-}
-
-export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<MonitoringSnapshot> {
-  const { rangeStart, rangeEnd, label } = getRange(period);
-  const inRange = { gte: rangeStart, lte: rangeEnd };
+export async function getMonitoringSnapshot(range: RevenueRange): Promise<MonitoringSnapshot> {
+  const inRange = { gte: range.rangeStart, lt: range.rangeEnd };
   const payoutPeriodKey = parsePayoutMonth(undefined);
   const payoutRange = getPayoutMonthRange(payoutPeriodKey);
   const jobSelect = {
@@ -222,12 +200,18 @@ export async function getMonitoringSnapshot(period: MonitoringPeriod): Promise<M
   ]);
 
   return {
-    period,
-    label,
-    rangeStart,
-    rangeEnd,
+    selection: {
+      period: range.period,
+      from: range.from,
+      to: range.to,
+    },
+    label: range.label,
+    rangeStart: range.rangeStart,
+    rangeEnd: range.rangeEnd,
     jobs: { total, booked, assigned, inProgress, completed, cancelled, unassigned },
     finance: {
+      billedRevenue: numeric(invoiceTotals._sum.total),
+      paymentsCollected: numeric(paymentTotals._sum.amount),
       invoiced: numeric(invoiceTotals._sum.total),
       received: numeric(paymentTotals._sum.amount),
       cashCollectedByTeams: numeric(teamCashTotals._sum.amount),
