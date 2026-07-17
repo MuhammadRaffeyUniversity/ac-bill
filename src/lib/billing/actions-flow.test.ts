@@ -9,6 +9,8 @@ describe("job-flow invoice action contract", () => {
     expect(source).toContain("createInvoiceWithPayments");
     expect(source).toContain("payments: { create:");
     expect(source).toContain("tx.feedback.create");
+    expect(source).toContain("tx.commissionEntry.create");
+    expect(source).toContain("tx.payoutObligation.createMany");
     expect(source).toContain("db.$transaction");
   });
 
@@ -22,5 +24,11 @@ describe("job-flow invoice action contract", () => {
     expect(source).toContain("TeamEntryType.COMPLETION");
     expect(source).toContain("ReviewStatus.APPROVED");
     expect(source).toContain("JOB_NOT_READY");
+  });
+
+  it("requires an auditable partner, team members, and commission rule", () => {
+    expect(source).toContain("sourcePartnerId");
+    expect(source).toContain("commissionRules");
+    expect(source).toContain("COMMISSION_CONFIGURATION_INVALID");
   });
 });

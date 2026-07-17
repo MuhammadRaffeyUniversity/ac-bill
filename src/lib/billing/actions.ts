@@ -10,6 +10,7 @@ import { calculateInvoiceTotals, formatInvoiceNumber, getPaymentSummary } from "
 import { createInvoiceWithPaymentsSchema, recordPaymentsSchema } from "@/src/lib/billing/schema";
 import { requireRole } from "@/src/lib/auth/guards";
 import { db } from "@/src/lib/db";
+import { buildCommissionRecords } from "@/src/lib/payouts/commission-obligations";
 
 export type BillingActionState = { error?: string; success?: string; invoiceId?: string; jobId?: string };
 
@@ -18,6 +19,21 @@ const invoiceInclude = {
   payments: { select: { amount: true } },
   job: { select: { id: true } },
 } as const;
+
+const commissionRuleSelect = {
+  teamRate: true,
+  partnerRate: true,
+  companyRate: true,
+} as const;
+
+function isConfirmedCommissionRule(
+  compensationType: "SALARY" | "COMMISSION",
+  rule: { teamRate: Prisma.Decimal; partnerRate: Prisma.Decimal; companyRate: Prisma.Decimal },
+) {
+  const rates = [Number(rule.teamRate), Number(rule.partnerRate), Number(rule.companyRate)];
+  const expected = compensationType === "COMMISSION" ? [0.6, 0.25, 0.15] : [0, 0.25, 0];
+  return rates.every((rate, index) => Math.abs(rate - expected[index]) < 0.000001);
+}
 
 function parseInvoiceWithPaymentsFormData(formData: FormData) {
   const items = JSON.parse(String(formData.get("items") ?? "[]"));
@@ -107,9 +123,50 @@ export async function createInvoiceWithPayments(
             performed: true,
             submittedEntries: { some: { entryType: TeamEntryType.COMPLETION, reviewStatus: ReviewStatus.APPROVED } },
           },
-          select: { id: true },
+          select: {
+            id: true,
+            sourcePartnerId: true,
+            assignedTeam: {
+              select: {
+                id: true,
+                compensationType: true,
+                members: {
+                  where: { active: true },
+                  orderBy: [{ name: "asc" }, { id: "asc" }],
+                  select: { id: true },
+                },
+                commissionRules: {
+                  where: {
+                    effectiveFrom: { lte: now },
+                    OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }],
+                  },
+                  orderBy: { effectiveFrom: "desc" },
+                  take: 1,
+                  select: commissionRuleSelect,
+                },
+              },
+            },
+          },
         });
         if (!readyJob) throw new Error("JOB_NOT_READY");
+        if (!readyJob.sourcePartnerId || !readyJob.assignedTeam || readyJob.assignedTeam.members.length !== 2) {
+          throw new Error("COMMISSION_CONFIGURATION_INVALID");
+        }
+
+        const team = readyJob.assignedTeam;
+        const commissionRule = team.commissionRules[0] ?? await tx.commissionRule.findFirst({
+          where: {
+            teamId: null,
+            compensationType: team.compensationType,
+            effectiveFrom: { lte: now },
+            OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }],
+          },
+          orderBy: { effectiveFrom: "desc" },
+          select: commissionRuleSelect,
+        });
+        if (!commissionRule || !isConfirmedCommissionRule(team.compensationType, commissionRule)) {
+          throw new Error("COMMISSION_CONFIGURATION_INVALID");
+        }
 
         const existing = await tx.invoice.findUnique({ where: { jobId: data.jobId }, select: { id: true } });
         if (existing) throw new Error("INVOICE_EXISTS");
@@ -138,6 +195,26 @@ export async function createInvoiceWithPayments(
             })) },
           },
         });
+        const commissionRecords = buildCommissionRecords({
+          invoiceId: invoice.id,
+          jobId: job.id,
+          teamId: team.id,
+          partnerId: readyJob.sourcePartnerId,
+          compensationType: team.compensationType,
+          subtotal: totals.subtotal,
+          discount: totals.discount,
+          members: [team.members[0], team.members[1]],
+          rates: {
+            teamRate: Number(commissionRule.teamRate),
+            partnerRate: Number(commissionRule.partnerRate),
+            companyRate: Number(commissionRule.companyRate),
+          },
+          earnedAt: now,
+        });
+        await tx.commissionEntry.create({ data: commissionRecords.commissionEntry });
+        if (commissionRecords.obligations.length) {
+          await tx.payoutObligation.createMany({ data: commissionRecords.obligations });
+        }
         await tx.job.update({ where: { id: job.id }, data: { paymentStatus } });
         await tx.feedback.create({ data: { jobId: job.id, customerId: job.customerId, token: randomBytes(24).toString("base64url") } });
         return invoice;
@@ -149,6 +226,9 @@ export async function createInvoiceWithPayments(
     } catch (error) {
       if (error instanceof Error && error.message === "JOB_NOT_READY") return { error: "The job changed and is no longer ready to invoice. Refresh it first." };
       if (error instanceof Error && error.message === "INVOICE_EXISTS") return { error: "This job already has an invoice." };
+      if (error instanceof Error && error.message === "COMMISSION_CONFIGURATION_INVALID") {
+        return { error: "Set the source partner, two active team members, and the confirmed commission rule before issuing the invoice." };
+      }
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002" && attempt < 2) continue;
       throw error;
     }
